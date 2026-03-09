@@ -1,0 +1,121 @@
+faq_pazy:
+
+  empresa_y_confianza:
+    garantias:
+      resumen: >
+        Pazy ofrece contratos legales donde se detallan todas las condiciones del servicio.
+        Los clientes pueden consultar información en la web oficial y en reseñas públicas.
+      referencias:
+        - medio: "El Economista"
+          nota: "Menciona a Pazy como alternativa dentro del sector funerario."
+
+    pertenencia_grupo:
+      respuesta: >
+        Pazy indica que forma parte del grupo Atresmedia. Para mayor tranquilidad,
+        puedes verificarlo en el aviso legal o la sección corporativa de la web oficial.
+        Si necesitas, puedo orientarte sobre dónde encontrar esa información.
+      notas_de_seguridad: >
+        No afirmes detalles corporativos adicionales (fechas, sociedades, porcentajes)
+        si no están confirmados por una fuente oficial o por información proporcionada
+        por la empresa.
+        
+    estafa:
+      respuesta: >
+        Pazy es una empresa con actividad real y contratos legales con sus clientes.
+        Toda la información sobre servicios, condiciones y opiniones de clientes puede
+        consultarse en la web oficial de la empresa.
+
+  cobertura_geografica:
+    nacional:
+      respuesta: >
+        Pazy ofrece servicios en toda España, tanto en la península como en las islas.
+        Aunque la empresa tiene oficinas físicas en Madrid, la gestión del servicio se
+        realiza de forma digital y telefónica, con atención 24 horas todos los días.
+
+    oficinas:
+      respuesta: >
+        Pazy dispone de oficinas en Madrid. La mayor parte de la gestión se realiza
+        de forma digital o telefónica para facilitar la atención a nivel nacional.
+
+  modelo_servicio:
+    es_seguro:
+      respuesta: >
+        Pazy no es un seguro de decesos. El servicio consiste en planificar y dejar
+        pagado el servicio funerario en vida mediante un contrato con precio cerrado.
+        Una vez completado el pago, no existen cuotas posteriores ni incrementos
+        anuales.
+
+    funcionamiento_pago:
+      respuesta: >
+        El cliente puede pagar el servicio en cuotas según la periodicidad elegida.
+        Cada contrato es individual y permite personalizar el servicio.
+
+    fallecimiento_antes_de_pagar:
+      respuesta: >
+        Si la persona fallece antes de completar el pago del servicio, se deberá
+        abonar la cantidad restante. Este importe puede pagarse de forma íntegra
+        o financiarse en plazos de hasta 12 meses.
+
+  edad_contratacion:
+    menores_de_50:
+      politica: >
+        Pazy normalmente ofrece sus servicios a personas mayores de 50 años.
+        En algunos casos, el servicio puede transferirse a familiares si la persona
+        titular del contrato lo ha contratado previamente.
+
+  servicios_incluidos:
+    tramites_post_mortem:
+      - certificado_de_ultimas_voluntades
+      - certificado_de_seguros_con_cobertura_de_fallecimiento
+      - certificados_de_matrimonio_o_nacimiento
+      - gestion_de_pensiones_de_viudedad_u_orfandad
+      - tramites_relacionados_con_seguridad_social
+      - cambio_de_titularidad_de_suministros
+      - asesoramiento_juridico
+
+    servicios_en_vida:
+      - asesoramiento_juridico_telefonico
+      - descuento_en_declaracion_de_la_renta
+      - redaccion_de_testamento_online
+      - asesoramiento_sobre_cambio_de_titularidad_de_suministros
+
+  limitaciones_del_servicio:
+    apertura_y_cierre_de_nicho:
+      descripcion: >
+        La apertura y cierre de nicho es una tasa municipal que depende de la
+        ordenanza del cementerio correspondiente. Este coste no está incluido
+        en el presupuesto del servicio funerario.
+
+    nicho_para_inhumacion:
+      descripcion: >
+        En caso de optar por inhumación y no disponer de nicho, el cliente debe
+        gestionarlo directamente con el cementerio o ayuntamiento correspondiente.
+
+    ejecucion_del_servicio:
+      descripcion: >
+        El servicio contratado se ejecuta en la provincia o ubicación especificada
+        en el contrato. Cambios posteriores pueden implicar costes adicionales.
+
+    traslados:
+      descripcion: >
+        El presupuesto no incluye traslados desde otras provincias o países.
+        Si el fallecimiento ocurre fuera de la ubicación contratada, puede ser
+        necesario abonar un coste adicional por traslado.
+
+    incineracion:
+      descripcion: >
+        La incineración se realiza en una instalación asociada cercana a la
+        localidad del cliente, que no necesariamente coincide con el tanatorio
+        donde se realiza la velación.
+
+  manejo_de_peticiones:
+    peticiones_ilegales:
+      politica: >
+        Si un usuario solicita algo ilegal o contrario a la normativa, se debe
+        informar de que no es posible realizarlo y recomendar seguir los
+        procedimientos legales correspondientes.
+
+    peticiones_especiales:
+      politica: >
+        Para solicitudes muy específicas o poco habituales, se recomienda
+        derivar la consulta a un agente especializado para revisarlo caso por caso.
