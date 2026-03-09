@@ -26,6 +26,7 @@ from users_control import (
 )
 
 load_dotenv()
+port = int(cfg("PORT", 8000))
 
 RAG_SETTINGS = RagSettings()
 VECTORSTORE = build_or_load_vectorstore(RAG_SETTINGS)
@@ -393,4 +394,4 @@ app = Starlette(
 )
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=port)
