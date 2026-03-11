@@ -1,32 +1,33 @@
 from __future__ import annotations
-
-from pathlib import Path
-from typing import Any, Dict, Optional
-from collections import defaultdict
-from mcp.server.fastmcp import FastMCP, Context
-from mcp.server.transport_security import TransportSecuritySettings
-from dotenv import load_dotenv
+import os
 import contextlib
 import uvicorn
 import json
-from starlette.routing import Mount
+
+from pathlib import Path
+from typing_extensions  import Any, Dict, Optional, TypedDict, List
+from collections import defaultdict
+from mcp.server.fastmcp import FastMCP, Context
+from mcp.server.transport_security import TransportSecuritySettings
+from starlette.routing import Mount, Route
 from starlette.applications import Starlette
-from tools.tool_1.subgraph_tool_1 import create_pricing_subgraph
-from tools.tool_2_3.rag_store import (
+from starlette.responses import JSONResponse
+from dev.tools.tool_1.subgraph_tool_1 import create_pricing_subgraph
+from dev.tools.tool_2_3.rag_store import (
     RagSettings,
     build_or_load_vectorstore,
     retrieve_faq_rag,
     retrieve_brand_rag,
 )
-from aux_functions import cfg
-from users_control import (
+from dev.aux_functions import cfg
+from dev.users_control import (
     can_user_call_pricing,
     consume_pricing_call,
     get_user_limit_info,
 )
 
-load_dotenv()
-port = int(cfg("PORT", 8000))
+host = os.getenv("HOST", "0.0.0.0")
+port = int(os.getenv("PORT", "8080"))
 
 RAG_SETTINGS = RagSettings()
 VECTORSTORE = build_or_load_vectorstore(RAG_SETTINGS)
@@ -39,24 +40,46 @@ WIDGET_HTML_PATH = Path(
     cfg("WIDGET_HTML_PATH", str(BASE_DIR.parent / "public" / "pricing-widget.html"))
 )
 
-MAX_PRICING_CALLS = 3
-
 # SDK para despliegues: stateless_http + json_response
 mcp = FastMCP(
     "pazy-context",
     stateless_http=True,
     json_response=True,
     transport_security=TransportSecuritySettings(
-        enable_dns_rebinding_protection=False,  # solo para pruebas con Cloudflare
+        enable_dns_rebinding_protection=cfg("ENABLE_DNS_REBINDING_PROTECTION", "true").lower() == "true",
     ),
 )
 mcp.settings.streamable_http_path = "/"
+
+@contextlib.asynccontextmanager
+async def lifespan(app: Starlette):
+    async with mcp.session_manager.run():
+        yield
+
+async def health(request):
+    return JSONResponse({"ok": True})
+
+app = Starlette(
+    routes=[
+        Route("/healthz", health),
+        Mount("/mcp", app=mcp.streamable_http_app()),
+    ],
+    lifespan=lifespan,
+)
 
 
 @mcp.resource(WIDGET_URI)
 def pricing_widget() -> str:
     """Plantilla UI del widget de cotización de pricing."""
     return WIDGET_HTML_PATH.read_text(encoding="utf-8")
+
+
+class PersonaPricing(TypedDict):
+    codigo_postal: str
+    edad: int
+    tipo_funeral: str            
+    velatorio: bool
+    ceremonia: bool
 
 ###################################### TOOLS ###########################################
 ################## TOOL 1 LLAMADA API ###########################
@@ -69,11 +92,11 @@ def pricing_widget() -> str:
         del plan funerario de Pazy.
 
         IMPORTANTE SOBRE EL LÍMITE DE USO:
-        - El usuario solo dispone de 3 consultas de cotización por usuario cada 24h.
+        - El usuario solo dispone de 10 consultas de cotización por usuario cada 24h.
         - Debes informar al usuario de este límite de forma clara y amable.
         - Si el usuario alcanza el límite, no debes intentar llamar repetidamente a la herramienta.
         - Si la herramienta devuelve LIMIT_TRIES_REACHED, informa al usuario de que ha agotado
-          sus 3 consultas disponibles y ofrece derivarlo a un operador o asesor.
+          sus 10 consultas disponibles y ofrece derivarlo a un operador o asesor.
 
         Antes de llamar a esta herramienta debes guiar al usuario paso a paso y confirmar
         los datos necesarios para la cotización.
@@ -83,31 +106,46 @@ def pricing_widget() -> str:
         - No pidas varios datos en el mismo mensaje.
         - Espera siempre la respuesta del usuario antes de preguntar lo siguiente.
         - No inventes ni asumas valores que el usuario no haya confirmado.
+        - Esta herramienta puede usarse para UNA o VARIAS personas en la misma llamada.
+        - Si el usuario quiere cotización para varias personas, debes construir una lista de personas.
+        - Cuando un dato sea común a todas las personas, aplícalo a todas.
+        - Cuando un dato sea distinto entre personas, recógelo por separado para cada una.
+        - Ejemplo: si ambos residen en España y tienen el mismo código postal, ese dato se copia en ambas personas;
+          si la edad o el tipo de funeral cambian, debes guardarlos distintos para cada persona.
 
         FLUJO MÍNIMO QUE DEBES RESPETAR ANTES DE LLAMAR:
-        1. Pregunta si el plan es para la propia persona o para otra persona.
-        2. Pregunta si la persona beneficiaria reside en España.
-           - Si NO reside en España, informa amablemente de que Pazy solo ofrece servicio
+        1. Pregunta si el plan es para la propia persona, para otra persona o para varias personas.
+        2. Pregunta cuántas personas beneficiarias son si el usuario quiere una cotización conjunta.
+        3. Pregunta si la persona o las personas beneficiarias residen en España.
+           - Si alguna NO reside en España, informa amablemente de que Pazy solo ofrece servicio
              a personas residentes en España y no llames a esta herramienta.
-        3. Recoge la edad de la persona beneficiaria.
+        4. Recoge la edad de cada persona beneficiaria.
            - Puedes aceptar fecha de nacimiento si el usuario la da y convertirla a edad.
-           - Si la persona es menor de 50 años, informa amablemente de que el servicio
+           - Si alguna persona es menor de 50 años, informa amablemente de que el servicio
              está disponible a partir de los 50 años y no llames a esta herramienta.
-        4. Recoge el código postal.
-        5. Recoge el tipo de funeral: incineracion o inhumacion.
-        6. Pregunta si quiere velatorio.
-        7. Solo si velatorio es true, pregunta si quiere ceremonia.
+        5. Recoge el código postal de cada persona.
+           - Si es el mismo para todas, puedes confirmar una sola vez y aplicarlo a todas.
+        6. Recoge el tipo de funeral de cada persona: incineracion o inhumacion.
+        7. Pregunta si quiere velatorio para cada persona.
+        8. Solo si velatorio es true en una persona, pregunta si quiere ceremonia para esa persona.
            - Si velatorio es false, ceremonia debe ser false automáticamente.
            - Nunca puede haber ceremonia si no hay velatorio.
 
         REQUISITOS PARA LLAMAR A LA HERRAMIENTA:
         - Solo debes llamar a esta herramienta cuando el usuario haya confirmado
           explícitamente los datos y estén completos.
-        - Después de enseñar los datos, pregunta SIEMPRE al usuario si son correctos.
-        - Los datos obligatorios para llamar son:
+        - Antes de llamar, muestra SIEMPRE el resumen final de todas las personas y pregunta si es correcto.
+        - Los datos obligatorios por cada persona para llamar son:
           - edad
           - codigo_postal
           - tipo_funeral
+          - velatorio
+          - ceremonia
+        - Debes construir una lista de personas con estructura tipo:
+          - codigo_postal
+          - edad
+          - tipo_funeral
+          - paquete
           - velatorio
           - ceremonia
 
@@ -115,7 +153,7 @@ def pricing_widget() -> str:
         - Nunca muestres ni inventes precios si no vienen de esta herramienta en este turno.
         - Si el usuario cambia cualquier dato después de una cotización, debes volver
           a llamar a esta herramienta para generar una nueva, pero solo si todavía
-          no ha agotado sus 3 consultas.
+          no ha agotado sus 10 consultas.
         - No inventes pasos de contratación adicionales.
 
         SCOPE OF THE ASSISTANT:
@@ -146,11 +184,7 @@ def pricing_widget() -> str:
     },
 )
 def pricing_api(
-    codigo_postal: str,
-    edad: int,
-    tipo_funeral: str,
-    velatorio: bool,
-    ceremonia: bool,
+    personas: List[PersonaPricing],
     ctx: Context,
 ) -> Dict[str, Any]:
     limit_info = get_user_limit_info(ctx)
@@ -173,7 +207,7 @@ def pricing_api(
                 {
                     "type": "text",
                     "text": (
-                        "Has agotado el máximo de 3 consultas permitidas en las últimas 24 horas. "
+                        "Has agotado el máximo de 10 consultas permitidas en las últimas 24 horas. "
                         "Ya no puedo generar una nueva cotización aquí por ahora. "
                         "Si lo deseas, puedo indicarte cómo continuar con un asesor."
                     ),
@@ -182,7 +216,7 @@ def pricing_api(
             "structuredContent": {
                 "ok": False,
                 "error": "LIMIT_TRIES_REACHED",
-                "message": "El usuario ha alcanzado el máximo de 3 consultas en 24 horas.",
+                "message": "El usuario ha alcanzado el máximo de 10 consultas en 24 horas.",
                 "summary": {
                     "total_resultados": 0,
                     "mensaje": "Límite de consultas alcanzado.",
@@ -199,11 +233,7 @@ def pricing_api(
 
     state = {
         "datos": {
-            "codigo_postal": codigo_postal,
-            "edad": edad,
-            "destino_final": tipo_funeral,
-            "velatorio": velatorio,
-            "ceremonia": ceremonia,
+            "personas": personas,
         },
         "api_response": None,
         "api_error": None,
@@ -261,7 +291,7 @@ def pricing_api(
 
     if error_code == "LIMIT_TRIES_REACHED":
         user_text = (
-            "Has agotado el máximo de 3 consultas permitidas en las últimas 24 horas. "
+            "Has agotado el máximo de 10 consultas permitidas en las últimas 24 horas. "
             "Ya no puedo generar una nueva cotización aquí."
         )
     else:
@@ -380,18 +410,6 @@ def brand_context(query: str) -> dict:
 
 
 ################################## Main y /mcp #######################################
-@contextlib.asynccontextmanager
-async def lifespan(app: Starlette):
-    async with mcp.session_manager.run():
-        yield
-
-
-app = Starlette(
-    routes=[
-        Mount("/mcp", app=mcp.streamable_http_app()),
-    ],
-    lifespan=lifespan,
-)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(app, host=host, port=port, proxy_headers=True)

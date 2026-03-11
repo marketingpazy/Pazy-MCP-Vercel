@@ -11,11 +11,24 @@ TOOL_NAME = "pricing_api"
 OUTPUT_PATH = Path("public/pricing-widget.sample.json")
 
 PAYLOAD = {
-    "codigo_postal": "15005",
-    "edad": 60,
-    "tipo_funeral": "incineracion",
-    "velatorio": True,
-    "ceremonia": False,
+    "personas": [
+        {
+            "codigo_postal": "15005",
+            "cp_servicio": "15005",
+            "edad": 60,
+            "tipo_funeral": "incineracion",
+            "velatorio": True,
+            "ceremonia": False,
+        },
+        {
+            "codigo_postal": "15005",
+            "cp_servicio": "15005",
+            "edad": 75,
+            "tipo_funeral": "inhumacion",
+            "velatorio": True,
+            "ceremonia": False,
+        }
+    ]
 }
 
 

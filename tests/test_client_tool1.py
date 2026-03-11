@@ -4,7 +4,6 @@ from mcp.client.streamable_http import streamable_http_client
 from dotenv import load_dotenv
 
 SERVER_URL = "http://localhost:8000/mcp"
-SERVER_URL_2 = "https://rochester-array-cork-salvation.trycloudflare.com/mcp"
 
 async def main():
     async with streamable_http_client(SERVER_URL) as transport:
@@ -16,20 +15,49 @@ async def main():
             tools = await session.list_tools()
             print("TOOLS:", [t.name for t in tools.tools])
 
-            # Datos de ejemplo (ajusta si tu API requiere valores concretos)
-            payload = {
-                "codigo_postal": "28001",
-                "edad": 55,
-                "tipo_funeral": "inhumacion", 
-                "velatorio": True,
-                "ceremonia": False,
+            # ---------- TEST 1: UNA PERSONA ----------
+            payload_single = {
+                "personas": [
+                    {
+                        "codigo_postal": "28001",
+                        "edad": 55,
+                        "tipo_funeral": "inhumacion",
+                        "velatorio": True,
+                        "ceremonia": False
+                    }
+                ]
             }
 
-            # 4 intentos para verificar el límite (3 éxitos máximo)
-            for i in range(1, 2):
-                print(f"\n--- CALL #{i} ---")
-                result = await session.call_tool("pricing_api", payload)
-                print(result.content)
+            print("\n--- CALL SINGLE PERSON ---")
+            result = await session.call_tool("pricing_api", payload_single)
+            print(result.content)
+
+
+            # ---------- TEST 2: VARIAS PERSONAS ----------
+            payload_multi = {
+                "personas": [
+                    {
+                        "codigo_postal": "08005",
+                        "edad": 55,
+                        "tipo_funeral": "incineracion",
+                        "velatorio": True,
+                        "ceremonia": False
+                    },
+                    {
+                        "codigo_postal": "08005",
+                        "cp_servicio": "08005",
+                        "edad": 65,
+                        "tipo_funeral": "inhumacion",
+                        "velatorio": False,
+                        "ceremonia": False
+                    }
+                ]
+            }
+
+            print("\n--- CALL MULTI PERSON ---")
+            result = await session.call_tool("pricing_api", payload_multi)
+            print(result.content)
+
 
 if __name__ == "__main__":
     load_dotenv()

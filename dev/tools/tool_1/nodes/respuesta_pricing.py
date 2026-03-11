@@ -161,6 +161,43 @@ def _normalize_presupuesto(presupuesto: Dict[str, Any], presupuesto_idx: int) ->
         "requiere_contacto_asesor": bool(presupuesto.get("requiere_contacto_asesor")),
     }
 
+def _build_input_personas(datos: Dict[str, Any], api_response: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    api_response = api_response or {}
+    personas = datos.get("personas")
+
+    if isinstance(personas, list) and personas:
+        return {
+            "personas": [
+                {
+                    "persona_numero": i + 1,
+                    "codigo_postal": _clean_text(p.get("codigo_postal")),
+                    "cp_servicio": _clean_text(p.get("cp_servicio")) or _clean_text(p.get("codigo_postal")),
+                    "edad": _to_int(p.get("edad")),
+                    "paquete": _clean_text(p.get("paquete")),
+                    "destino_final": _clean_text(p.get("tipo_funeral")) or _clean_text(p.get("destino_final")),
+                    "velatorio": p.get("velatorio"),
+                    "ceremonia": p.get("ceremonia"),
+                }
+                for i, p in enumerate(personas)
+                if isinstance(p, dict)
+            ]
+        }
+
+    return {
+        "personas": [
+            {
+                "persona_numero": 1,
+                "codigo_postal": _clean_text(api_response.get("codigo_postal")) or _clean_text(datos.get("codigo_postal")),
+                "cp_servicio": _clean_text(api_response.get("cp_servicio")) or _clean_text(datos.get("cp_servicio")) or _clean_text(api_response.get("codigo_postal")) or _clean_text(datos.get("codigo_postal")),
+                "edad": _to_int(api_response.get("edad")) or _to_int(datos.get("edad")),
+                "paquete": _clean_text(api_response.get("paquete")) or _clean_text(datos.get("paquete")),
+                "destino_final": _clean_text(api_response.get("destino_final")) or _clean_text(datos.get("tipo_funeral")) or _clean_text(datos.get("destino_final")),
+                "velatorio": datos.get("velatorio"),
+                "ceremonia": datos.get("ceremonia"),
+            }
+        ]
+    }
+
 
 def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -190,13 +227,7 @@ def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
                 "api_status": api_status,
                 "error": api_error or "INVALID_API_RESPONSE",
                 "message": "No se pudo normalizar la respuesta de pricing.",
-                "input": {
-                    "codigo_postal": datos.get("codigo_postal"),
-                    "edad": datos.get("edad"),
-                    "destino_final": datos.get("destino_final"),
-                    "velatorio": datos.get("velatorio"),
-                    "ceremonia": datos.get("ceremonia"),
-                },
+                "input": _build_input_personas(datos, api_response if isinstance(api_response, dict) else {}),
                 "quotes": [],
                 "budgets": [],
                 "summary": {
@@ -224,14 +255,7 @@ def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
             "api_status": api_status,
             "error": None if success else api_error,
             "message": _clean_text(api_response.get("mensaje")),
-            "input": {
-                "codigo_postal": _clean_text(api_response.get("codigo_postal")) or _clean_text(datos.get("codigo_postal")),
-                "edad": _to_int(api_response.get("edad")) or _to_int(datos.get("edad")),
-                "paquete": _clean_text(api_response.get("paquete")),
-                "destino_final": _clean_text(api_response.get("destino_final")) or _clean_text(datos.get("destino_final")),
-                "velatorio": datos.get("velatorio"),
-                "ceremonia": datos.get("ceremonia"),
-            },
+            "input": _build_input_personas(datos, api_response),
             "quotes": quotes,
             "budgets": [
                 {
@@ -273,6 +297,7 @@ def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
                 all_quotes.append(
                     {
                         **quote,
+                        "id": f'{budget["persona_numero"]}-{quote["id"]}',
                         "persona_numero": budget["persona_numero"],
                     }
                 )
@@ -282,14 +307,7 @@ def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
             "api_status": api_status,
             "error": None if success else api_error,
             "message": _clean_text(api_response.get("mensaje")),
-            "input": {
-                "codigo_postal": _clean_text(datos.get("codigo_postal")),
-                "edad": _to_int(datos.get("edad")),
-                "paquete": _clean_text(datos.get("paquete")),
-                "destino_final": _clean_text(datos.get("destino_final")),
-                "velatorio": datos.get("velatorio"),
-                "ceremonia": datos.get("ceremonia"),
-            },
+            "input": _build_input_personas(datos, api_response),
             "quotes": all_quotes,
             "budgets": budgets,
             "summary": {
@@ -310,14 +328,7 @@ def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
             "ok": False,
             "api_status": api_status,
             "error": api_error or "UNRECOGNIZED_API_RESPONSE",
-            "message": _clean_text(api_response.get("mensaje")),
-            "input": {
-                "codigo_postal": datos.get("codigo_postal"),
-                "edad": datos.get("edad"),
-                "destino_final": datos.get("destino_final"),
-                "velatorio": datos.get("velatorio"),
-                "ceremonia": datos.get("ceremonia"),
-            },
+            "message": _build_input_personas(datos, api_response if isinstance(api_response, dict) else {}),
             "quotes": [],
             "budgets": [],
             "summary": {

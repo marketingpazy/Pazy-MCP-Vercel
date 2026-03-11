@@ -9,157 +9,176 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
       :root {
-        --primary:       #00C6CC;
-        --primary-dark:  #0B8698;
-        --primary-mid:   #33B0B4;
-        --primary-light: #B2EDEF;
-        --bg:            #EBFEFF;
-        --bg-subtle:     #DEFEFF;
-        --white:         #ffffff;
-        --text:          #374F65;
-        --text-muted:    #5F7283;
-        --text-light:    #8195AF;
-        --border:        #B2EDEF;
-        --shadow-sm:     0 1px 4px rgba(0,198,204,0.10);
-        --shadow-md:     0 4px 20px rgba(0,198,204,0.14);
-        --shadow-lg:     0 12px 40px rgba(0,198,204,0.18);
+        /* Brand */
+        --brand:         #00C6CC;
+        --brand-dark:    #0B8698;
+        --brand-light:   #ebfeff;
+        --brand-border:  rgba(0, 198, 204, 0.25);
+        /* Neutrals */
+        --bg:            #ffffff;
+        --bg-secondary:  #f7f7f8;
+        --border:        #e5e5ea;
+        --text:          #1c1c1e;
+        --text-secondary:#6e6e73;
+        --text-tertiary: #8e8e93;
+        --shadow-sm:     0 1px 3px rgba(0,0,0,0.06);
+        --shadow-md:     0 4px 12px rgba(0,0,0,0.08);
+        /* Layout */
         --radius-sm:     8px;
-        --radius-md:     14px;
-        --radius-lg:     20px;
+        --radius-md:     12px;
+        --radius-lg:     16px;
         --radius-full:   9999px;
-        --font:          'Plus Jakarta Sans', system-ui, sans-serif;
-        --transition:    0.2s ease;
+        --font:          'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --transition:    0.18s ease;
       }
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       html, body { width: 100%; min-height: 100%; background: var(--bg); }
-      body { padding: 20px; font-family: var(--font); font-size: 15px; color: var(--text); -webkit-font-smoothing: antialiased; }
+      body { padding: 16px; font-family: var(--font); font-size: 15px; color: var(--text); -webkit-font-smoothing: antialiased; }
 
-      main { width: 100%; max-width: 940px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+      main { width: 100%; max-width: 940px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 
       /* ── Panel ── */
       .panel {
-        background: var(--white);
+        background: var(--bg);
         border-radius: var(--radius-lg);
-        padding: 24px;
-        box-shadow: var(--shadow-md);
+        padding: 16px;
+        box-shadow: var(--shadow-sm);
         border: 1px solid var(--border);
       }
 
-      /* ── Header ── */
-      .header-top {
+      /* ── Brand row ── */
+      .brand-row {
         display: flex;
         align-items: center;
-        gap: 14px;
-        margin-bottom: 16px;
+        gap: 8px;
+        margin-bottom: 12px;
       }
-      .header-avatar {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
+      .brand-logo {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
         overflow: hidden;
         flex-shrink: 0;
       }
-      .header-avatar img,
-      .header-avatar svg { width: 100%; height: 100%; display: block; }
-      .header-label {
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--primary-dark);
-        margin-bottom: 2px;
+      .brand-logo svg { width: 100%; height: 100%; display: block; }
+      .brand-name {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--brand-dark);
+        letter-spacing: -0.01em;
       }
-      .header-title { font-size: 1.25rem; font-weight: 800; color: var(--text); line-height: 1.2; }
-      .header-subtitle { font-size: 0.88rem; color: var(--text-muted); margin-top: 4px; font-weight: 400; }
+
+      /* ── Summary message ── */
+      .summary-message { font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 12px; }
 
       /* ── Summary grid ── */
       .summary-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 10px;
-        margin-top: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 8px;
       }
       .summary-item {
-        background: var(--bg);
-        border: 1px solid var(--border);
+        background: var(--brand-light);
+        border: 1px solid var(--brand-border);
         border-radius: var(--radius-md);
-        padding: 12px 14px;
+        padding: 10px 12px;
       }
       .summary-item .label {
         display: block;
-        font-size: 0.75rem;
+        font-size: 0.72rem;
         font-weight: 600;
-        color: var(--text-light);
+        color: var(--brand-dark);
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        margin-bottom: 4px;
+        margin-bottom: 3px;
       }
-      .summary-item .value { font-size: 0.97rem; font-weight: 700; color: var(--text); }
+      .summary-item .value { font-size: 0.93rem; font-weight: 700; color: var(--text); }
 
-      /* ── Cards grid ── */
-      .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+      /* ── Cards slider ── */
+      .cards {
+        display: flex;
+        flex-direction: row;
+        gap: 16px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 6px;
+        /* thin branded scrollbar */
+        scrollbar-width: thin;
+        scrollbar-color: var(--brand-border) transparent;
+      }
+      .cards::-webkit-scrollbar { height: 4px; }
+      .cards::-webkit-scrollbar-track { background: transparent; }
+      .cards::-webkit-scrollbar-thumb { background: var(--brand-border); border-radius: 4px; }
+      .cards.dragging { cursor: grabbing; scroll-snap-type: none; }
+      .cards { cursor: grab; }
 
       /* ── Quote card ── */
       .quote-card {
-        background: var(--white);
+        /* Fixed width so cards peek on narrow viewports */
+        flex: 0 0 300px;
+        scroll-snap-align: start;
+        background: var(--bg);
         border-radius: var(--radius-lg);
-        border: 1px solid var(--border);
+        border: 1px solid var(--brand-border);
         overflow: hidden;
         box-shadow: var(--shadow-md);
         display: flex;
         flex-direction: column;
       }
       .quote-top {
-        padding: 20px 20px 16px;
-        background: var(--bg);
-        border-bottom: 1px solid var(--border);
+        padding: 24px 20px 20px;
+        background: var(--brand-light);
+        border-bottom: 1px solid var(--brand-border);
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
-        gap: 8px;
+        gap: 10px;
       }
 
       /* ── Badges ── */
-      .quote-badges { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+      .quote-badges { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
       .badge {
         display: inline-flex;
         align-items: center;
         border-radius: var(--radius-full);
-        padding: 5px 12px;
-        font-size: 0.76rem;
-        font-weight: 700;
+        padding: 4px 12px;
+        font-size: 0.74rem;
+        font-weight: 600;
         line-height: 1;
       }
-      .badge-primary { background: var(--primary); color: var(--white); }
-      .badge-muted   { background: var(--bg-subtle); color: var(--text-muted); border: 1px solid var(--border); }
+      .badge-primary { background: var(--brand); color: #fff; }
+      .badge-muted   { background: rgba(0,198,204,0.12); color: var(--brand-dark); border: 1px solid var(--brand-border); }
 
-      .quote-title    { font-size: 1.05rem; font-weight: 800; color: var(--text); }
-      .quote-subtitle { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; }
+      .quote-title    { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+      .quote-subtitle { font-size: 0.84rem; color: var(--text-secondary); line-height: 1.4; }
 
-      /* ── Price boxes ── */
-      .price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 4px; }
+      /* ── Price rows (stacked) ── */
+      .price-row { display: flex; flex-direction: column; width: 100%; margin-top: 8px; }
       .price-box {
-        background: var(--white);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        padding: 12px 14px;
-        text-align: center;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border);
       }
-      .price-label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-light); margin-bottom: 4px; }
-      .price-value { font-size: 1.15rem; font-weight: 800; color: var(--primary-dark); }
-      .price-value.savings { color: #16a34a; font-size: 1rem; }
+      .price-box:last-child { border-bottom: none; }
+      .price-label { font-size: 0.88rem; color: var(--text-secondary); font-weight: 400; line-height: 1.4; text-align: left; }
+      .price-value { font-size: 1rem; font-weight: 700; color: var(--text); white-space: nowrap; }
+      .price-value.savings { color: var(--brand-dark); }
 
       /* ── Card body ── */
-      .quote-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 18px; flex: 1; }
+      .quote-body { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
 
       .section-title {
-        font-size: 0.78rem;
+        font-size: 0.7rem;
         font-weight: 700;
-        color: var(--text-light);
+        color: var(--brand-dark);
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 10px;
+        letter-spacing: 0.06em;
+        margin-bottom: 8px;
       }
 
       /* ── KV list ── */
@@ -168,12 +187,12 @@
         display: flex;
         justify-content: space-between;
         gap: 12px;
-        font-size: 0.9rem;
-        padding: 9px 0;
-        border-bottom: 1px solid var(--bg);
+        font-size: 0.88rem;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border);
       }
       .kv-item:last-child { border-bottom: none; }
-      .kv-key   { color: var(--text-muted); }
+      .kv-key   { color: var(--text-secondary); }
       .kv-value { color: var(--text); font-weight: 600; text-align: right; }
 
       /* ── Services list ── */
@@ -188,7 +207,7 @@
       }
       .bullet-list li::before {
         content: "✓";
-        color: var(--primary);
+        color: var(--brand);
         font-weight: 700;
         flex-shrink: 0;
         margin-top: 1px;
@@ -207,14 +226,14 @@
 
       /* ── States ── */
       .empty-state, .error-state, .debug-state {
-        padding: 24px;
+        padding: 20px;
         border-radius: var(--radius-md);
         text-align: center;
       }
-      .empty-state { background: var(--bg); border: 1px solid var(--border); color: var(--text-muted); }
+      .empty-state { background: var(--brand-light); border: 1px solid var(--brand-border); color: var(--text-secondary); }
       .error-state { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
-      .debug-state { background: var(--bg-subtle); border: 1px solid var(--border); color: var(--primary-dark); }
-      .empty-state h3, .error-state h3, .debug-state h3 { margin-bottom: 6px; font-size: 1rem; }
+      .debug-state { background: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-secondary); }
+      .empty-state h3, .error-state h3, .debug-state h3 { margin-bottom: 6px; font-size: 0.95rem; }
 
       /* ── CTA Button ── */
       .actions { display: flex; }
@@ -222,57 +241,49 @@
         width: 100%;
         appearance: none;
         border: none;
-        border-radius: var(--radius-md);
+        border-radius: var(--radius-full);
         padding: 14px;
         font-family: var(--font);
-        font-size: 0.97rem;
+        font-size: 0.95rem;
         font-weight: 700;
-        background: var(--primary);
-        color: var(--white);
+        background: var(--brand);
+        color: #fff;
         cursor: pointer;
         transition: background var(--transition), transform 0.1s;
+        letter-spacing: 0.01em;
       }
-      .button:hover:not(:disabled)  { background: var(--primary-dark); }
+      .button:hover:not(:disabled)  { background: var(--brand-dark); }
       .button:active:not(:disabled) { transform: scale(0.98); }
-      .button:disabled { opacity: 0.45; cursor: not-allowed; }
+      .button:disabled { opacity: 0.35; cursor: not-allowed; }
 
-      .footer-note { font-size: 0.78rem; color: var(--text-light); text-align: center; }
+      .footer-note { font-size: 0.76rem; color: var(--text-tertiary); text-align: center; }
 
-      /* ── Quote icon (vela) ── */
+      /* ── Quote icon ── */
       .quote-icon {
         display: flex;
         justify-content: center;
-        align-items: flex-end;
-        padding-bottom: 4px;
+        align-items: center;
+        color: var(--brand-dark);
       }
-      .quote-icon svg {
-        height: 64px;
-        width: auto;
-      }
+      .quote-icon svg { height: 52px; width: auto; }
 
       /* ── Responsive ── */
       @media (max-width: 640px) {
-        body { padding: 14px; }
-        .panel { padding: 18px; }
+        body { padding: 12px; }
+        .panel { padding: 14px; }
         .price-row { grid-template-columns: 1fr; }
-        .header-title { font-size: 1.1rem; }
       }
     </style>
   </head>
   <body>
     <main>
       <section class="panel">
-        <div class="header-top">
-          <div class="header-avatar">
+        <div class="brand-row">
+          <div class="brand-logo">
             <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="256" height="256" rx="46" fill="#0B8698"/><path d="M132.004 48C120.606 48 109.907 51.0392 100.637 56.3707C100.41 52.5502 97.2978 49.5282 93.4957 49.5282H75.1583C71.2048 49.5282 68 52.7992 68 56.8343V216.702C68 220.729 71.2048 224 75.1583 224H76.1172C89.6684 224 100.654 212.788 100.654 198.965V170.281C109.915 175.604 120.615 178.644 132.004 178.644C167.35 178.644 196 149.402 196 113.326C196 77.2503 167.35 48 132.004 48ZM163.901 113.695V114.167C163.666 139.657 144.109 160.417 119.462 161.945H119.319C118.663 161.928 118.133 161.378 118.133 160.709C118.133 160.322 118.31 159.979 118.579 159.756C118.63 159.721 118.672 159.687 118.722 159.653C123.475 156.158 127.252 151.368 129.548 145.779C115.072 144.645 103.304 133.665 100.662 119.387C100.301 117.421 100.107 115.395 100.107 113.317C100.107 111.24 100.301 109.214 100.662 107.248C101.075 104.981 101.722 102.809 102.572 100.74C107.4 88.9951 118.764 80.7532 132.013 80.7532C149.055 80.7532 162.976 94.3953 163.868 111.575V111.643C163.893 112.27 163.91 112.897 163.91 113.532V113.687H163.901V113.695Z" fill="#DEFEFF"/></svg>
           </div>
-          <div>
-            <div class="header-label">pazy</div>
-            <h1 class="header-title">Tu cotización personalizada</h1>
-          </div>
+          <span class="brand-name">pazy</span>
         </div>
-        <p id="summary-message" class="header-subtitle">Estamos preparando tus opciones disponibles.</p>
-        <div id="summary-grid" class="summary-grid"></div>
       </section>
 
       <section id="status-container"></section>
@@ -280,8 +291,6 @@
     </main>
 
     <script type="module">
-      const summaryMessageEl = document.querySelector("#summary-message");
-      const summaryGridEl = document.querySelector("#summary-grid");
       const statusContainerEl = document.querySelector("#status-container");
       const cardsEl = document.querySelector("#cards");
 
@@ -333,28 +342,25 @@
         if (value === false) return "No";
         return "—";
       };
-      const escapeHtml = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 
-      const renderSummary = (data) => {
-        const summary = data?.summary ?? {};
-        const input = data?.input ?? {};
-        summaryMessageEl.textContent = summary?.mensaje || (data?.ok ? "Estas son las cotizaciones que hemos encontrado para ti." : "No se ha podido obtener una cotización.");
-        const items = [
-          { label: "Código postal", value: input.codigo_postal ?? "—" },
-          { label: "Edad", value: input.edad ?? "—" },
-          { label: "Tipo de funeral", value: input.destino_final ?? "—" },
-          { label: "Velatorio", value: formatBoolean(input.velatorio) },
-          { label: "Ceremonia", value: formatBoolean(input.ceremonia) },
-          { label: "Resultados", value: summary.total_resultados ?? 0 },
-        ];
-        summaryGridEl.innerHTML = items.map((item) => `<div class="summary-item"><span class="label">${escapeHtml(item.label)}</span><span class="value">${escapeHtml(item.value)}</span></div>`).join("");
+      const getInputPersonas = (data) => {
+        const personas = data?.input?.personas;
+        return Array.isArray(personas) ? personas : [];
       };
+
+      const getPersonaInputForQuote = (data, quote) => {
+        const personas = getInputPersonas(data);
+        const personaNumero = Number(quote?.persona_numero);
+        return personas.find((p) => Number(p?.persona_numero) === personaNumero) || personas[0] || {};
+      };
+
+      const escapeHtml = (value) => String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 
       const renderStatus = (data) => {
         const error = data?.error;
         const ok = Boolean(data?.ok);
         if (ok) {
-          statusContainerEl.innerHTML = DEBUG_LOCAL ? `<div class="debug-state"><h3>Modo debug local</h3><p>La vista usa un payload local y no inicializa el bridge de ChatGPT.</p></div>` : "";
+          statusContainerEl.innerHTML = "";
           return;
         }
         if (error === "LIMIT_TRIES_REACHED") {
@@ -364,25 +370,62 @@
         statusContainerEl.innerHTML = `<div class="error-state"><h3>No se pudo obtener la cotización</h3><p>${escapeHtml(data?.message || "Ha ocurrido un problema al consultar la API.")}</p></div>`;
       };
 
+      const deriveCardTitle = (input) => {
+        const raw = input?.destino_final || input?.tipo_funeral || "";
+        const destino = raw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const velatorio = input?.velatorio;
+        if (destino === "incineracion") return velatorio ? "Incineración con velatorio" : "Incineración sin velatorio";
+        if (destino === "inhumacion") return velatorio ? "Inhumación con velatorio" : "Inhumación sin velatorio";
+        return null;
+      };
       const renderQuotes = (data) => {
         const quotes = Array.isArray(data?.quotes) ? data.quotes : [];
         cardsEl.innerHTML = "";
         if (!data?.ok) return;
         if (!quotes.length) {
-          cardsEl.innerHTML = `<div class="empty-state"><h3>No hay cotizaciones disponibles</h3><p>No hemos encontrado resultados para los datos indicados.</p></div>`;
+          cardsEl.innerHTML = `<div class="empty-state"><h3>Buscando.</h3><p>El sistema está buscando cotizaciones para sus datos.</p></div>`;
           return;
         }
+
         cardsEl.innerHTML = quotes.map((quote) => {
+          const personaInput = getPersonaInputForQuote(data, quote);
+          const cardTitle = deriveCardTitle(personaInput);
+
           const cuotas = Array.isArray(quote?.cuotas_mensuales) ? quote.cuotas_mensuales : [];
           const servicios = Array.isArray(quote?.servicios_incluidos) ? quote.servicios_incluidos : [];
           const avisos = Array.isArray(quote?.avisos) ? quote.avisos : [];
-          const cuotasHtml = cuotas.length ? `<div><div class="section-title">Pago en 12 plazos</div><div class="kv-list">${cuotas.map((cuota) => `<div class="kv-item"><span class="kv-key">${escapeHtml(cuota?.label ?? "Plazo")}</span><span class="kv-value">${escapeHtml(formatCurrency(cuota?.cuota_mensual))}</span></div>`).join("")}</div></div>` : "";
+          const cuotasHtml = "";
           const serviciosHtml = servicios.length ? `<div><div class="section-title">Servicios incluidos</div><ul class="bullet-list">${servicios.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>` : "";
           const avisosHtml = avisos.length ? `<div><div class="section-title">Avisos</div><div class="warning-list">${avisos.map((item) => `<div class="warning">${escapeHtml(item)}</div>`).join("")}</div></div>` : "";
           const extrasHtml = quote?.admite_extras === false || quote?.tipo_restriccion_extras ? `<div><div class="section-title">Condiciones</div><ul class="bullet-list"><li>Extras permitidos: ${escapeHtml(formatBoolean(quote?.admite_extras))}</li>${quote?.tipo_restriccion_extras ? `<li>Restricción: ${escapeHtml(quote.tipo_restriccion_extras)}</li>` : ""}</ul></div>` : "";
-          const velaIcon = `<svg width="57" height="113" viewBox="0 0 57 113" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.44869 106.835C0.560838 88.0155 0.601083 58.7968 2.44869 46.7873C16.2483 30.3084 56.0267 39.3967 56.0267 46.7871V106.835C56.0267 110.987 3.16098 113.935 2.44869 106.835Z" fill="#0B8698"/><path fill-rule="evenodd" clip-rule="evenodd" d="M27.3232 36.3981C27.4545 33.4859 27.8722 30.3735 28.7213 28.5054L30.4033 29.2699C29.7128 30.7891 29.2993 33.589 29.169 36.4813C29.0392 39.36 29.1989 42.0997 29.5351 43.4444L27.7427 43.8925C27.3398 42.2811 27.1914 39.324 27.3232 36.3981Z" fill="#0B8698"/><path d="M19.4002 19.1728C20.6605 13.8765 25.8673 12.7064 31.4101 2.5446C36.0291 7.16361 39.0896 11.7801 39.9483 16.8831C40.4345 19.7702 39.9676 22.7636 38.3148 25.6143C37.1456 27.6304 33.9356 32.4438 29.1151 32.8574C24.3321 33.2672 21.3526 28.4215 20.3596 26.6166C18.7988 23.7974 18.6881 22.1562 19.4002 19.1728Z" fill="#087D8E"/><path d="M23.5312 21.4811C23.8392 24.2525 25.1941 29.6105 28.1503 28.8715C31.1064 28.1324 34.3089 20.5573 35.5407 16.8621" stroke="white" stroke-width="2" stroke-linecap="round"/><path d="M8.96387 49.9177C18.6751 52.719 39.8904 56.6409 47.0618 49.9177" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>`;
-          return `<article class="quote-card"><div class="quote-top"><div class="quote-icon">${velaIcon}</div><div class="quote-badges">${quote?.distancia_km != null ? `<span class="badge badge-muted">${escapeHtml(formatDistance(quote.distancia_km))}</span>` : ""}</div><div class="quote-title">${escapeHtml(quote?.nombre || "Cotización")}</div><div class="quote-subtitle">${escapeHtml([quote?.direccion, quote?.ciudad, quote?.provincia].filter(Boolean).join(" · ") || "Ubicación no disponible")}</div><div class="price-row"><div class="price-box"><span class="price-label">Precio total</span><span class="price-value">${escapeHtml(formatCurrency(quote?.precio_total))}</span></div><div class="price-box"><span class="price-label">Descuento pago al contado</span><span class="price-value savings">${escapeHtml(formatCurrency(quote?.precio_contado))}</span></div></div></div><div class="quote-body"><div><div class="section-title">Resumen</div><div class="kv-list"><div class="kv-item"><span class="kv-key">Ciudad</span><span class="kv-value">${escapeHtml(quote?.ciudad || "—")}</span></div><div class="kv-item"><span class="kv-key">Provincia</span><span class="kv-value">${escapeHtml(quote?.provincia || "—")}</span></div><div class="kv-item"><span class="kv-key">Distancia</span><span class="kv-value">${escapeHtml(formatDistance(quote?.distancia_km))}</span></div></div></div>${cuotasHtml}${serviciosHtml}${avisosHtml}${extrasHtml}<div class="actions"><button class="button" disabled type="button">Continuar</button></div><div class="footer-note">Esta vista muestra la información devuelta por la cotización actual.</div></div></article>`;
+          const velaIcon = `Cliente ${quote?.persona_numero ?? ""}`;
+
+          return `<article class="quote-card"><div class="quote-top"><div class="quote-icon">${velaIcon}</div><div class="quote-title">${escapeHtml(cardTitle || quote?.nombre || "Cotización")}</div><div class="price-row"><div class="price-box"><span class="price-label">Precio total</span><span class="price-value">${escapeHtml(formatCurrency(quote?.precio_total))}</span></div><div class="price-box"><span class="price-label">Precio de descuento pago al contado</span><span class="price-value savings">${escapeHtml(formatCurrency(quote?.precio_contado))}</span></div></div></div><div class="quote-body">${serviciosHtml}${avisosHtml}${extrasHtml}<div class="actions"><button class="button" disabled type="button">Continuar</button></div><div class="footer-note">Esta vista muestra la información devuelta por la cotización actual.</div></div></article>`;
         }).join("");
+      };
+
+      const renderSummary = (data) => {
+        const summary = data?.summary ?? {};
+        const personas = getInputPersonas(data);
+        const primera = personas[0] || {};
+
+        const totalPersonas = personas.length;
+        const extraPersonas = totalPersonas > 1 ? `<div class="summary-item"><span class="label">Personas</span><span class="value">${escapeHtml(totalPersonas)}</span></div>` : "";
+
+        statusContainerEl.innerHTML = `
+          <div class="panel">
+            <div class="summary-message">${escapeHtml(summary?.mensaje || (data?.ok ? "Estas son las cotizaciones que hemos encontrado para ti." : "No se ha podido obtener una cotización."))}</div>
+            <div class="summary-grid">
+              ${extraPersonas}
+              <div class="summary-item"><span class="label">Código postal</span><span class="value">${escapeHtml(primera.codigo_postal ?? "—")}</span></div>
+              <div class="summary-item"><span class="label">Edad</span><span class="value">${escapeHtml(primera.edad ?? "—")}</span></div>
+              <div class="summary-item"><span class="label">Tipo de funeral</span><span class="value">${escapeHtml(primera.destino_final ?? "—")}</span></div>
+              <div class="summary-item"><span class="label">Velatorio</span><span class="value">${escapeHtml(formatBoolean(primera.velatorio))}</span></div>
+              <div class="summary-item"><span class="label">Ceremonia</span><span class="value">${escapeHtml(formatBoolean(primera.ceremonia))}</span></div>
+              <div class="summary-item"><span class="label">Resultados</span><span class="value">${escapeHtml(summary.total_resultados ?? 0)}</span></div>
+            </div>
+          </div>
+        `;
       };
 
       const renderFromToolResult = (toolResult) => {
@@ -513,6 +556,30 @@
           renderQuotes({ ok: true, quotes: [] });
         }
       }
+      // ── Drag-to-scroll para el slider en desktop ──
+      const slider = cardsEl;
+      let isDragging = false, startX, startScrollLeft;
+
+      slider.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startX = e.pageX - slider.offsetLeft;
+        startScrollLeft = slider.scrollLeft;
+        slider.classList.add('dragging');
+      });
+      window.addEventListener('mouseup', () => {
+        isDragging = false;
+        slider.classList.remove('dragging');
+      });
+      slider.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.pageX - slider.offsetLeft;
+        slider.scrollLeft = startScrollLeft - (x - startX) * 1.2;
+      });
+      slider.addEventListener('mouseleave', () => {
+        isDragging = false;
+        slider.classList.remove('dragging');
+      });
     </script>
   </body>
 </html>

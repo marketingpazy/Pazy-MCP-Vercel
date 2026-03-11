@@ -12,7 +12,7 @@ from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
-from aux_functions import cfg
+from dev.aux_functions import cfg
 
 @dataclass
 class RagSettings:
