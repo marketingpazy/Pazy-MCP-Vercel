@@ -3,7 +3,7 @@ from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 from dotenv import load_dotenv
 
-SERVER_URL = "http://localhost:8000/mcp"
+SERVER_URL = "http://localhost:8080/mcp"
 
 async def main():
     async with streamable_http_client(SERVER_URL) as transport:

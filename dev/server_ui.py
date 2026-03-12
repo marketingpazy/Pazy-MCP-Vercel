@@ -3,7 +3,7 @@ import os
 import contextlib
 import uvicorn
 import json
-
+from dotenv import load_dotenv
 from pathlib import Path
 from typing_extensions  import Any, Dict, Optional, TypedDict, List
 from collections import defaultdict
@@ -26,6 +26,7 @@ from dev.users_control import (
     get_user_limit_info,
 )
 
+load_dotenv()
 host = os.getenv("HOST", "0.0.0.0")
 port = int(os.getenv("PORT", "8080"))
 

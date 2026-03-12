@@ -16,18 +16,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN pip install --no-cache-dir -U pip pdm
 
-COPY pyproject.toml pdm.lock* README.md /app/
+COPY pyproject.toml pdm.lock* /app/
 
 RUN pdm config python.use_venv false && \
-    pdm install --prod --no-editable
-
-RUN pip install --no-cache-dir \
-    --index-url https://download.pytorch.org/whl/cpu \
-    torch
-
+    pdm sync -G docker --no-editable --no-self
 
 COPY . /app
 
 EXPOSE 8080
 
-CMD ["pdm","run","python","app.py"]
+CMD ["pdm", "run", "python", "app.py"]

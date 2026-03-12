@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 
-SERVER_URL = "http://localhost:8000/mcp"
+SERVER_URL = "http://localhost:8080/mcp"
 TOOL_NAME = "pricing_api"
 OUTPUT_PATH = Path("public/pricing-widget.sample.json")
 
