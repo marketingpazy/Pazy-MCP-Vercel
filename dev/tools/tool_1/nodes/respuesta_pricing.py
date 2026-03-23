@@ -1,61 +1,98 @@
 from __future__ import annotations
 
 import re
+import os
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlencode
+
+from dev.aux_functions import price_field_for_pack, clean_text, to_float, normalize_list_of_lines, to_int, format_money_for_text, map_destino_final, map_pack, map_si_no
+
+def _build_resumen_texto(input_data: Dict[str, Any], resultado: Dict[str, Any]) -> str:
+    nombre_plan = clean_text(
+        resultado.get("nombre")
+        or resultado.get("etiqueta")
+        or "Plan funerario"
+    )
+
+    precio_total = format_money_for_text(resultado.get("precio_total"))
+    precio_contado = format_money_for_text(resultado.get("precio_contado"))
+
+    cuotas = resultado.get("cuotas_mensuales") or []
+    cuota_preferida = None
+
+    if isinstance(cuotas, list):
+        for cuota in cuotas:
+            if not isinstance(cuota, dict):
+                continue
+            if to_float(cuota.get("plazo_anos")) == 10:
+                cuota_preferida = cuota
+                break
+        if cuota_preferida is None and cuotas:
+            cuota_preferida = cuotas[0] if isinstance(cuotas[0], dict) else None
+
+    cuotas_texto = ""
+    if cuota_preferida:
+        plazo = to_float(cuota_preferida.get("plazo_anos"))
+        importe = to_float(cuota_preferida.get("cuota_mensual"))
+        if plazo is not None and importe is not None:
+            plazo_str = str(int(plazo)) if float(plazo).is_integer() else str(plazo)
+            importe_str = format_money_for_text(importe)
+            cuotas_texto = f"{plazo_str} años: {importe_str}/mes"
+
+    partes = [nombre_plan]
+
+    if precio_total:
+        partes.append(f"precio total: {precio_total}")
+
+    if precio_contado:
+        partes.append(f"precio descuento: {precio_contado}")
+
+    if cuotas_texto:
+        partes.append(f"cuotas: {cuotas_texto}")
+
+    return " | ".join(partes)
 
 
-def _clean_text(value: Any) -> Optional[str]:
-    if value is None:
-        return None
-    text = str(value).strip()
-    if not text:
-        return None
+def crear_url(input_data: Dict[str, Any], resultado: Dict[str, Any]) -> str:
+    edad = to_float(input_data.get("edad"))
+    zip_code = clean_text(input_data.get("codigo_postal"))
+    funeral_type = map_destino_final(input_data.get("destino_final"))
+    sala_velatorio = map_si_no(input_data.get("velatorio"))
+    ceremonia = map_si_no(input_data.get("ceremonia"))
+    pack = map_pack(input_data.get("paquete"))
 
-    # quita comillas externas si vienen serializadas como string raro
-    if len(text) >= 2 and text[0] == text[-1] and text[0] in {"'", '"'}:
-        text = text[1:-1].strip()
+    precio_total = to_float(resultado.get("precio_total"))
+    resumen = _build_resumen_texto(input_data, resultado)
 
-    # elimina prefijos decorativos tipo "** "
-    text = re.sub(r"^\*+\s*", "", text).strip()
-    return text or None
+    params: Dict[str, Any] = {}
 
+    if edad is not None:
+        params["age"] = int(edad) if float(edad).is_integer() else edad
 
-def _to_float(value: Any) -> Optional[float]:
-    try:
-        if value is None or value == "":
-            return None
-        return float(value)
-    except (TypeError, ValueError):
-        return None
+    if zip_code:
+        params["zip"] = zip_code
 
+    if funeral_type:
+        params["pre_funeral_type"] = funeral_type
 
-def _to_int(value: Any) -> Optional[int]:
-    try:
-        if value is None or value == "":
-            return None
-        return int(value)
-    except (TypeError, ValueError):
-        return None
+    if sala_velatorio:
+        params["sala_velatorio"] = sala_velatorio
 
+    if ceremonia:
+        params["ceremonia"] = ceremonia
 
-def _normalize_list_of_lines(value: Any) -> List[str]:
-    """
-    Convierte textos tipo:
-    "- item 1\n - item 2"
-    en ["item 1", "item 2"].
-    """
-    text = _clean_text(value)
-    if not text:
-        return []
+    if pack:
+        params["pre_selected_plan"] = pack
 
-    parts = []
-    for line in text.splitlines():
-        item = line.strip()
-        item = re.sub(r"^[\-\•\*]\s*", "", item).strip()
-        if item:
-            parts.append(item)
-    return parts
+    price_field = price_field_for_pack(pack)
+    if price_field and precio_total is not None:
+        params[price_field] = int(precio_total) if float(precio_total).is_integer() else precio_total
 
+    if resumen:
+        params["qu_tipo_de_funeral_deseas"] = resumen
+
+    base_link = os.getenv("BASE_MAGIC_LINK")
+    return f"{base_link}?{urlencode(params, doseq=True)}"
 
 def _normalize_cuotas(value: Any) -> List[Dict[str, Any]]:
     """
@@ -77,7 +114,7 @@ def _normalize_cuotas(value: Any) -> List[Dict[str, Any]]:
     for k, v in value.items():
         match = re.search(r"(\d+)", str(k))
         plazo = int(match.group(1)) if match else None
-        cuota = _to_float(v)
+        cuota = to_float(v)
         items.append(
             {
                 "plazo_anos": plazo,
@@ -90,112 +127,108 @@ def _normalize_cuotas(value: Any) -> List[Dict[str, Any]]:
     return items
 
 
-def _normalize_resultado(resultado: Dict[str, Any], idx: int) -> Dict[str, Any]:
+def _normalize_resultado(resultado: Dict[str, Any], input_data: Dict[str, Any], idx: int) -> Dict[str, Any]:
     extras_detalle = resultado.get("extras_detalle") or {}
     kilometraje = extras_detalle.get("kilometraje") or {}
+    magic_link = crear_url(input_data, resultado)
 
     return {
         "id": str(idx),
-        "nombre": _clean_text(resultado.get("nombre")),
-        "etiqueta": _clean_text(resultado.get("etiqueta")),
-        "direccion": _clean_text(resultado.get("direccion")),
-        "ciudad": _clean_text(resultado.get("ciudad")),
-        "provincia": _clean_text(resultado.get("provincia")),
-        "codigo_postal": _clean_text(resultado.get("codigo_postal")),
-        #"telefono": _clean_text(resultado.get("telefono")),
-        #"email": _clean_text(resultado.get("email")),
-        "coordenadas": _clean_text(resultado.get("coordenadas")),
-        "tipo_empresa": _clean_text(resultado.get("tipo_empresa")),
-        "publico_privado": _clean_text(resultado.get("publico_privado")),
-        "distancia_km": _to_float(resultado.get("distancia_km")),
-        "precio_base": _to_float(resultado.get("precio_base")),
-        "precio_total": _to_float(resultado.get("precio_total")),
-        "precio_contado": _to_float(resultado.get("precio_contado")),
+        "nombre": clean_text(resultado.get("nombre")),
+        "etiqueta": clean_text(resultado.get("etiqueta")),
+        "direccion": clean_text(resultado.get("direccion")),
+        "ciudad": clean_text(resultado.get("ciudad")),
+        "provincia": clean_text(resultado.get("provincia")),
+        "codigo_postal": clean_text(resultado.get("codigo_postal")),
+        #"telefono": clean_text(resultado.get("telefono")),
+        #"email": clean_text(resultado.get("email")),
+        "coordenadas": clean_text(resultado.get("coordenadas")),
+        "tipo_empresa": clean_text(resultado.get("tipo_empresa")),
+        "publico_privado": clean_text(resultado.get("publico_privado")),
+        "distancia_km": to_float(resultado.get("distancia_km")),
+        "precio_base": to_float(resultado.get("precio_base")),
+        "precio_total": to_float(resultado.get("precio_total")),
+        "precio_contado": to_float(resultado.get("precio_contado")),
         "cuotas_mensuales": _normalize_cuotas(resultado.get("cuotas_mensuales")),
-        "servicios_incluidos": _normalize_list_of_lines(resultado.get("servicios_incluidos")),
+        "servicios_incluidos": normalize_list_of_lines(resultado.get("servicios_incluidos")),
         "avisos": resultado.get("avisos") if isinstance(resultado.get("avisos"), list) else [],
         "admite_extras": bool(resultado.get("admite_extras")),
-        "tipo_restriccion_extras": _clean_text(resultado.get("tipo_restriccion_extras")),
+        "tipo_restriccion_extras": clean_text(resultado.get("tipo_restriccion_extras")),
         "extras": {
             "extras_tipificados": extras_detalle.get("extras_tipificados") or [],
-            "extras_euros": _to_float(extras_detalle.get("extras_euros")),
-            "extras_legacy": _to_float(extras_detalle.get("extras_legacy")),
-            "total_extras": _to_float(extras_detalle.get("total_extras")),
+            "extras_euros": to_float(extras_detalle.get("extras_euros")),
+            "extras_legacy": to_float(extras_detalle.get("extras_legacy")),
+            "total_extras": to_float(extras_detalle.get("total_extras")),
             "kilometraje": {
-                "kilometros": _to_float(kilometraje.get("kilometros")),
-                "precio_por_km": _to_float(kilometraje.get("precio_por_km")),
-                "factor_ida_vuelta": _to_float(kilometraje.get("factor_ida_vuelta")),
-                "importe_calculado": _to_float(kilometraje.get("importe_calculado")),
-                "limite_maximo": _to_float(kilometraje.get("limite_maximo")),
-                "importe_final": _to_float(kilometraje.get("importe_final")),
+                "kilometros": to_float(kilometraje.get("kilometros")),
+                "precio_por_km": to_float(kilometraje.get("precio_por_km")),
+                "factor_ida_vuelta": to_float(kilometraje.get("factor_ida_vuelta")),
+                "importe_calculado": to_float(kilometraje.get("importe_calculado")),
+                "limite_maximo": to_float(kilometraje.get("limite_maximo")),
+                "importe_final": to_float(kilometraje.get("importe_final")),
             },
         },
         # para futuro botón
         "cta": {
-            "label": "Continuar",
-            "url": None,
-            "enabled": False,
+            "label": "Solicita tu plan funerario",
+            "url": magic_link,
+            "enabled": bool(magic_link),
         },
     }
 
 
-def _normalize_presupuesto(presupuesto: Dict[str, Any], presupuesto_idx: int) -> Dict[str, Any]:
+def _is_label_response(resultado: Dict[str, Any]) -> bool:
+    return clean_text(resultado.get("etiqueta")) == "El más barato"
+
+def _is_fav(resultado: Dict[str, Any]) -> bool:
+    return clean_text(resultado.get("etiqueta")) == "Nuestro favorito"
+
+
+def _pick_preferred_resultados(resultados: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    if not resultados:
+        return []
+
+    mas_barato = [r for r in resultados if isinstance(r, dict) and _is_label_response(r)]
+    if mas_barato:
+        return mas_barato
+
+    favorito = [r for r in resultados if isinstance(r, dict) and _is_fav(r)]
+    if favorito:
+        return favorito
+
+    return [r for r in resultados if isinstance(r, dict)]
+
+
+def _normalize_presupuesto(presupuesto: Dict[str, Any], datos, presupuesto_idx: int) -> Dict[str, Any]:
     resultados = presupuesto.get("resultados") or []
+    resultados_filtrados = _pick_preferred_resultados(resultados)
+
+    input_data = {
+        "edad": datos.get("edad"),
+        "codigo_postal": datos.get("codigo_postal"),
+        "destino_final": datos.get("destino_final"),
+        "velatorio": datos.get("velatorio"),
+        "ceremonia": datos.get("ceremonia"),
+        "paquete": presupuesto.get("paquete"),
+    }
+
     normalized_results = [
-        _normalize_resultado(r, idx=i + 1)
-        for i, r in enumerate(resultados)
-        if isinstance(r, dict)
+        _normalize_resultado(r, input_data, idx=i + 1 )
+        for i, r in enumerate(resultados_filtrados)
     ]
 
     return {
-        "persona_numero": _to_int(presupuesto.get("persona_numero")) or presupuesto_idx,
-        "codigo_postal": _clean_text(presupuesto.get("codigo_postal")),
-        "cp_servicio": _clean_text(presupuesto.get("cp_servicio")),
-        "paquete": _clean_text(presupuesto.get("paquete")),
-        "destino_final": _clean_text(presupuesto.get("destino_final")),
-        "edad": _to_int(presupuesto.get("edad")),
+        "persona_numero": to_int(presupuesto.get("persona_numero")) or presupuesto_idx,
+        "codigo_postal": clean_text(presupuesto.get("codigo_postal")),
+        "cp_servicio": clean_text(presupuesto.get("cp_servicio")),
+        "paquete": clean_text(presupuesto.get("paquete")),
+        "destino_final": clean_text(presupuesto.get("destino_final")),
+        "edad": to_int(presupuesto.get("edad")),
         "repatriacion": bool(presupuesto.get("repatriacion")),
-        "km_traslado_calculados": _to_float(presupuesto.get("km_traslado_calculados")),
-        "total_resultados": _to_int(presupuesto.get("total_resultados")) or len(normalized_results),
+        "km_traslado_calculados": to_float(presupuesto.get("km_traslado_calculados")),
+        "total_resultados": to_int(presupuesto.get("total_resultados")) or len(normalized_results),
         "quotes": normalized_results,
         "requiere_contacto_asesor": bool(presupuesto.get("requiere_contacto_asesor")),
-    }
-
-def _build_input_personas(datos: Dict[str, Any], api_response: Dict[str, Any] | None = None) -> Dict[str, Any]:
-    api_response = api_response or {}
-    personas = datos.get("personas")
-
-    if isinstance(personas, list) and personas:
-        return {
-            "personas": [
-                {
-                    "persona_numero": i + 1,
-                    "codigo_postal": _clean_text(p.get("codigo_postal")),
-                    "cp_servicio": _clean_text(p.get("cp_servicio")) or _clean_text(p.get("codigo_postal")),
-                    "edad": _to_int(p.get("edad")),
-                    "paquete": _clean_text(p.get("paquete")),
-                    "destino_final": _clean_text(p.get("tipo_funeral")) or _clean_text(p.get("destino_final")),
-                    "velatorio": p.get("velatorio"),
-                    "ceremonia": p.get("ceremonia"),
-                }
-                for i, p in enumerate(personas)
-                if isinstance(p, dict)
-            ]
-        }
-
-    return {
-        "personas": [
-            {
-                "persona_numero": 1,
-                "codigo_postal": _clean_text(api_response.get("codigo_postal")) or _clean_text(datos.get("codigo_postal")),
-                "cp_servicio": _clean_text(api_response.get("cp_servicio")) or _clean_text(datos.get("cp_servicio")) or _clean_text(api_response.get("codigo_postal")) or _clean_text(datos.get("codigo_postal")),
-                "edad": _to_int(api_response.get("edad")) or _to_int(datos.get("edad")),
-                "paquete": _clean_text(api_response.get("paquete")) or _clean_text(datos.get("paquete")),
-                "destino_final": _clean_text(api_response.get("destino_final")) or _clean_text(datos.get("tipo_funeral")) or _clean_text(datos.get("destino_final")),
-                "velatorio": datos.get("velatorio"),
-                "ceremonia": datos.get("ceremonia"),
-            }
-        ]
     }
 
 
@@ -217,7 +250,7 @@ def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
     api_error = state.get("api_error")
     api_status = state.get("api_status")
     datos = state.get("datos") or {}
-
+    
     # error aguas arriba o respuesta inválida
     if api_error or not isinstance(api_response, dict):
         return {
@@ -227,7 +260,13 @@ def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
                 "api_status": api_status,
                 "error": api_error or "INVALID_API_RESPONSE",
                 "message": "No se pudo normalizar la respuesta de pricing.",
-                "input": _build_input_personas(datos, api_response if isinstance(api_response, dict) else {}),
+                "input": {
+                    "codigo_postal": datos.get("codigo_postal"),
+                    "edad": datos.get("edad"),
+                    "destino_final": datos.get("destino_final"),
+                    "velatorio": datos.get("velatorio"),
+                    "ceremonia": datos.get("ceremonia"),
+                },
                 "quotes": [],
                 "budgets": [],
                 "summary": {
@@ -247,34 +286,41 @@ def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
         quotes = [
             _normalize_resultado(r, idx=i + 1)
             for i, r in enumerate(api_response.get("resultados", []))
-            if isinstance(r, dict)
+            if isinstance(r, dict) #and _is_label_response(r)
         ]
 
         normalized = {
             "ok": success,
             "api_status": api_status,
             "error": None if success else api_error,
-            "message": _clean_text(api_response.get("mensaje")),
-            "input": _build_input_personas(datos, api_response),
+            "message": clean_text(api_response.get("mensaje")),
+            "input": {
+                "codigo_postal": clean_text(api_response.get("codigo_postal")) or clean_text(datos.get("codigo_postal")),
+                "edad": to_int(api_response.get("edad")) or to_int(datos.get("edad")),
+                "paquete": clean_text(api_response.get("paquete")),
+                "destino_final": clean_text(api_response.get("destino_final")) or clean_text(datos.get("destino_final")),
+                "velatorio": datos.get("velatorio"),
+                "ceremonia": datos.get("ceremonia"),
+            },
             "quotes": quotes,
             "budgets": [
                 {
                     "persona_numero": 1,
-                    "codigo_postal": _clean_text(api_response.get("codigo_postal")) or _clean_text(datos.get("codigo_postal")),
+                    "codigo_postal": clean_text(api_response.get("codigo_postal")) or clean_text(datos.get("codigo_postal")),
                     "cp_servicio": None,
-                    "paquete": _clean_text(api_response.get("paquete")),
-                    "destino_final": _clean_text(api_response.get("destino_final")) or _clean_text(datos.get("destino_final")),
-                    "edad": _to_int(api_response.get("edad")) or _to_int(datos.get("edad")),
+                    "paquete": clean_text(api_response.get("paquete")),
+                    "destino_final": clean_text(api_response.get("destino_final")) or clean_text(datos.get("destino_final")),
+                    "edad": to_int(api_response.get("edad")) or to_int(datos.get("edad")),
                     "repatriacion": False,
                     "km_traslado_calculados": None,
-                    "total_resultados": _to_int(api_response.get("total_resultados")) or len(quotes),
+                    "total_resultados": to_int(api_response.get("total_resultados")) or len(quotes),
                     "quotes": quotes,
                     "requiere_contacto_asesor": bool(api_response.get("requiere_contacto_asesor")),
                 }
             ],
             "summary": {
-                "mensaje": _clean_text(api_response.get("mensaje")),
-                "total_resultados": _to_int(api_response.get("total_resultados")) or len(quotes),
+                "mensaje": clean_text(api_response.get("mensaje")),
+                "total_resultados": to_int(api_response.get("total_resultados")) or len(quotes),
                 "requiere_contacto_asesor": bool(api_response.get("requiere_contacto_asesor")),
                 "numero_clientes": 1,
                 "presupuestos_generados": 1,
@@ -286,7 +332,7 @@ def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
     # Caso B: respuesta multi-persona con presupuestos
     if isinstance(api_response.get("presupuestos"), list):
         budgets = [
-            _normalize_presupuesto(p, presupuesto_idx=i + 1)
+            _normalize_presupuesto(p, datos, presupuesto_idx=i + 1)
             for i, p in enumerate(api_response.get("presupuestos", []))
             if isinstance(p, dict)
         ]
@@ -297,7 +343,6 @@ def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
                 all_quotes.append(
                     {
                         **quote,
-                        "id": f'{budget["persona_numero"]}-{quote["id"]}',
                         "persona_numero": budget["persona_numero"],
                     }
                 )
@@ -306,16 +351,23 @@ def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
             "ok": success,
             "api_status": api_status,
             "error": None if success else api_error,
-            "message": _clean_text(api_response.get("mensaje")),
-            "input": _build_input_personas(datos, api_response),
+            "message": clean_text(api_response.get("mensaje")),
+            "input": {
+                "codigo_postal": clean_text(datos.get("codigo_postal")),
+                "edad": to_int(datos.get("edad")),
+                "paquete": clean_text(datos.get("paquete")),
+                "destino_final": clean_text(datos.get("destino_final")),
+                "velatorio": datos.get("velatorio"),
+                "ceremonia": datos.get("ceremonia"),
+            },
             "quotes": all_quotes,
             "budgets": budgets,
             "summary": {
-                "mensaje": _clean_text(api_response.get("mensaje")),
+                "mensaje": clean_text(api_response.get("mensaje")),
                 "total_resultados": sum(b["total_resultados"] for b in budgets),
                 "requiere_contacto_asesor": any(b["requiere_contacto_asesor"] for b in budgets),
-                "numero_clientes": _to_int(api_response.get("numero_clientes")),
-                "presupuestos_generados": _to_int(api_response.get("presupuestos_generados")) or len(budgets),
+                "numero_clientes": to_int(api_response.get("numero_clientes")),
+                "presupuestos_generados": to_int(api_response.get("presupuestos_generados")) or len(budgets),
             },
         }
 
@@ -328,11 +380,18 @@ def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
             "ok": False,
             "api_status": api_status,
             "error": api_error or "UNRECOGNIZED_API_RESPONSE",
-            "message": _build_input_personas(datos, api_response if isinstance(api_response, dict) else {}),
+            "message": clean_text(api_response.get("mensaje")),
+            "input": {
+                "codigo_postal": datos.get("codigo_postal"),
+                "edad": datos.get("edad"),
+                "destino_final": datos.get("destino_final"),
+                "velatorio": datos.get("velatorio"),
+                "ceremonia": datos.get("ceremonia"),
+            },
             "quotes": [],
             "budgets": [],
             "summary": {
-                "mensaje": _clean_text(api_response.get("mensaje")),
+                "mensaje": clean_text(api_response.get("mensaje")),
                 "total_resultados": 0,
                 "requiere_contacto_asesor": False,
                 "numero_clientes": None,

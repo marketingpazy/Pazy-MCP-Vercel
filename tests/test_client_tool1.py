@@ -17,45 +17,15 @@ async def main():
 
             # ---------- TEST 1: UNA PERSONA ----------
             payload_single = {
-                "personas": [
-                    {
-                        "codigo_postal": "28001",
-                        "edad": 55,
-                        "tipo_funeral": "inhumacion",
-                        "velatorio": True,
-                        "ceremonia": False
-                    }
-                ]
+                "codigo_postal": "28001",
+                "edad": 55,
+                "tipo_funeral": "inhumacion",
+                "velatorio": True,
+                "ceremonia": False
             }
 
             print("\n--- CALL SINGLE PERSON ---")
             result = await session.call_tool("pricing_api", payload_single)
-            print(result.content)
-
-
-            # ---------- TEST 2: VARIAS PERSONAS ----------
-            payload_multi = {
-                "personas": [
-                    {
-                        "codigo_postal": "08005",
-                        "edad": 55,
-                        "tipo_funeral": "incineracion",
-                        "velatorio": True,
-                        "ceremonia": False
-                    },
-                    {
-                        "codigo_postal": "08005",
-                        "cp_servicio": "08005",
-                        "edad": 65,
-                        "tipo_funeral": "inhumacion",
-                        "velatorio": False,
-                        "ceremonia": False
-                    }
-                ]
-            }
-
-            print("\n--- CALL MULTI PERSON ---")
-            result = await session.call_tool("pricing_api", payload_multi)
             print(result.content)
 
 

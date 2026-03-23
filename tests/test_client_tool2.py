@@ -17,7 +17,7 @@ async def main():
 
             result = await session.call_tool(
                 "get_context",
-                {"query": "Qué cubre el seguro y cómo funciona?", "k": 3},
+                {"query": "quiero hablar con un operador.", "k": 3},
             )
             print("\nRESULT:")
             print(result.content)

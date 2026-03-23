@@ -8,6 +8,8 @@ from pathlib import Path
 from typing_extensions  import Any, Dict, Optional, TypedDict, List
 from collections import defaultdict
 from mcp.server.fastmcp import FastMCP, Context
+from fastmcp.server.apps import AppConfig, ResourceCSP
+from fastmcp.server.apps import AppConfig
 from mcp.server.transport_security import TransportSecuritySettings
 from starlette.routing import Mount, Route
 from starlette.applications import Starlette
@@ -31,7 +33,6 @@ host = os.getenv("HOST", "0.0.0.0")
 port = int(os.getenv("PORT", "8080"))
 
 RAG_SETTINGS = RagSettings()
-VECTORSTORE = build_or_load_vectorstore(RAG_SETTINGS)
 subgraph_pricing = create_pricing_subgraph()
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -40,6 +41,16 @@ WIDGET_MIME_TYPE = cfg("WIDGET_MIME_TYPE", "text/html;profile=mcp-app")
 WIDGET_HTML_PATH = Path(
     cfg("WIDGET_HTML_PATH", str(BASE_DIR.parent / "public" / "pricing-widget.html"))
 )
+WIDGET_DOMAIN = "https://mcp.pazy.es"
+
+WIDGET_CONNECT_DOMAINS = [
+    # Añadir APIs externas solo si el widget hace fetch directamente.
+]
+
+WIDGET_RESOURCE_DOMAINS = [
+    "https://fonts.googleapis.com",
+    "https://fonts.gstatic.com",
+]
 
 # SDK para despliegues: stateless_http + json_response
 mcp = FastMCP(
@@ -47,7 +58,17 @@ mcp = FastMCP(
     stateless_http=True,
     json_response=True,
     transport_security=TransportSecuritySettings(
-        enable_dns_rebinding_protection=cfg("ENABLE_DNS_REBINDING_PROTECTION", "true").lower() == "true",
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=[
+            "mcp.pazy.es",
+            "mcp.pazy.es:*",
+            "mcp-pazy-dns-527294618400.europe-west1.run.app",
+            "mcp-pazy-dns-527294618400.europe-west1.run.app:*",
+        ],
+        allowed_origins=[
+            "https://mcp.pazy.es",
+            "https://mcp-pazy-dns-527294618400.europe-west1.run.app",
+        ],
     ),
 )
 mcp.settings.streamable_http_path = "/"
@@ -68,23 +89,33 @@ app = Starlette(
     lifespan=lifespan,
 )
 
-
-@mcp.resource(WIDGET_URI)
+@mcp.resource(
+    WIDGET_URI,
+    app=AppConfig(
+        domain="https://mcp.pazy.es",
+        prefers_border=True,
+        csp=ResourceCSP(
+            connect_domains=[],
+            resource_domains=[
+                "https://fonts.googleapis.com",
+                "https://fonts.gstatic.com",
+            ],
+            # frame_domains=[]  # solo si usas iframes
+        ),
+    ),
+)
 def pricing_widget() -> str:
-    """Plantilla UI del widget de cotización de pricing."""
     return WIDGET_HTML_PATH.read_text(encoding="utf-8")
 
-
-class PersonaPricing(TypedDict):
-    codigo_postal: str
-    edad: int
-    tipo_funeral: str            
-    velatorio: bool
-    ceremonia: bool
-
+"""
+@mcp.resource(WIDGET_URI)
+def pricing_widget():
+    return WIDGET_HTML_PATH.read_text(encoding="utf-8")
+"""
 ###################################### TOOLS ###########################################
 ################## TOOL 1 LLAMADA API ###########################
 @mcp.tool(
+    app=AppConfig(resource_uri=WIDGET_URI),
     name="pricing_api",
     description=(
         """Obtiene una cotización real del plan funerario de Pazy usando la API oficial.
@@ -107,46 +138,31 @@ class PersonaPricing(TypedDict):
         - No pidas varios datos en el mismo mensaje.
         - Espera siempre la respuesta del usuario antes de preguntar lo siguiente.
         - No inventes ni asumas valores que el usuario no haya confirmado.
-        - Esta herramienta puede usarse para UNA o VARIAS personas en la misma llamada.
-        - Si el usuario quiere cotización para varias personas, debes construir una lista de personas.
-        - Cuando un dato sea común a todas las personas, aplícalo a todas.
-        - Cuando un dato sea distinto entre personas, recógelo por separado para cada una.
-        - Ejemplo: si ambos residen en España y tienen el mismo código postal, ese dato se copia en ambas personas;
-          si la edad o el tipo de funeral cambian, debes guardarlos distintos para cada persona.
+        - Esta herramienta solo puede usarse para UNA persona por llamada.
+        - Si el usuario quiere cotización para varias personas, debes tramitar cada persona por separado.
 
         FLUJO MÍNIMO QUE DEBES RESPETAR ANTES DE LLAMAR:
-        1. Pregunta si el plan es para la propia persona, para otra persona o para varias personas.
-        2. Pregunta cuántas personas beneficiarias son si el usuario quiere una cotización conjunta.
-        3. Pregunta si la persona o las personas beneficiarias residen en España.
-           - Si alguna NO reside en España, informa amablemente de que Pazy solo ofrece servicio
-             a personas residentes en España y no llames a esta herramienta.
-        4. Recoge la edad de cada persona beneficiaria.
-           - Puedes aceptar fecha de nacimiento si el usuario la da y convertirla a edad.
-           - Si alguna persona es menor de 50 años, informa amablemente de que el servicio
-             está disponible a partir de los 50 años y no llames a esta herramienta.
-        5. Recoge el código postal de cada persona.
-           - Si es el mismo para todas, puedes confirmar una sola vez y aplicarlo a todas.
-        6. Recoge el tipo de funeral de cada persona: incineracion o inhumacion.
-        7. Pregunta si quiere velatorio para cada persona.
-        8. Solo si velatorio es true en una persona, pregunta si quiere ceremonia para esa persona.
-           - Si velatorio es false, ceremonia debe ser false automáticamente.
-           - Nunca puede haber ceremonia si no hay velatorio.
+        1. Pregunta si el plan es para la propia persona o para otra persona.
+        2. Pregunta si la persona beneficiaria reside en España.
+        - Si NO reside en España, informa amablemente de que Pazy solo ofrece servicio
+            a personas residentes en España y no llames a esta herramienta.
+        3. Recoge la edad de la persona beneficiaria.
+        - Puedes aceptar fecha de nacimiento si el usuario la da y convertirla a edad.
+        - Si la persona es menor de 50 años, informa amablemente de que el servicio
+            está disponible a partir de los 50 años, no llames a esta herramienta y ofrece derivarlo a un operador o asesor.
+        4. Recoge el código postal.
+        5. Recoge el tipo de funeral: incineracion o inhumacion.
+        6. Pregunta si quiere velatorio.
+        7. Pregunta si quiere ceremonia.
 
         REQUISITOS PARA LLAMAR A LA HERRAMIENTA:
         - Solo debes llamar a esta herramienta cuando el usuario haya confirmado
           explícitamente los datos y estén completos.
-        - Antes de llamar, muestra SIEMPRE el resumen final de todas las personas y pregunta si es correcto.
-        - Los datos obligatorios por cada persona para llamar son:
+        - Después de enseñar los datos, pregunta SIEMPRE al usuario si son correctos.
+        - Los datos obligatorios para llamar son:
           - edad
           - codigo_postal
           - tipo_funeral
-          - velatorio
-          - ceremonia
-        - Debes construir una lista de personas con estructura tipo:
-          - codigo_postal
-          - edad
-          - tipo_funeral
-          - paquete
           - velatorio
           - ceremonia
 
@@ -164,6 +180,9 @@ class PersonaPricing(TypedDict):
         - NO solicites datos personales (nombre, teléfono, email, DNI).
         - NO solicites datos de pago.
         - NO intentes completar una contratación.
+        - NO envies nunca una url como parte de la respuesta.
+        - NO expliques, ni listes, ni nombres los extras ni sus precios (incluído ceremonia) que tiene un tanatorio.
+        - NO envies el nombre del tanatorio como parte de la respuesta.
 
         Si el usuario desea continuar con la contratación,
         indícale que el siguiente paso se realiza a través del proceso
@@ -185,7 +204,11 @@ class PersonaPricing(TypedDict):
     },
 )
 def pricing_api(
-    personas: List[PersonaPricing],
+    codigo_postal: str,
+    edad: int,
+    tipo_funeral: str,
+    velatorio: bool,
+    ceremonia: bool,
     ctx: Context,
 ) -> Dict[str, Any]:
     limit_info = get_user_limit_info(ctx)
@@ -234,7 +257,11 @@ def pricing_api(
 
     state = {
         "datos": {
-            "personas": personas,
+            "codigo_postal": codigo_postal,
+            "edad": edad,
+            "destino_final": tipo_funeral,
+            "velatorio": velatorio,
+            "ceremonia": ceremonia,
         },
         "api_response": None,
         "api_error": None,
@@ -242,7 +269,7 @@ def pricing_api(
         "msg_post": None,
         "pricing_normalized": None,
     }
-
+    print(f"Tool datos: {state.get('datos')}")
     out = subgraph_pricing.invoke(state)
 
     api_error = out.get("api_error")
@@ -338,7 +365,8 @@ def pricing_api(
     },
 )
 def get_context(query: str) -> dict:
-    results = retrieve_faq_rag(VECTORSTORE, query=query, k=3)
+    vectorstore = build_or_load_vectorstore(RAG_SETTINGS)
+    results = retrieve_faq_rag(vectorstore, query=query, k=3)
 
     return {
         "content": [
@@ -383,8 +411,10 @@ def get_context(query: str) -> dict:
     },
 )
 def brand_context(query: str) -> dict:
-    results = retrieve_brand_rag(VECTORSTORE, query=query, k=3)
+    vectorstore = build_or_load_vectorstore(RAG_SETTINGS)
 
+    results = retrieve_brand_rag(vectorstore, query=query, k=3)
+    
     return {
         "content": [
             {
