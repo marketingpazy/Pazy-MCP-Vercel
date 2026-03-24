@@ -1,8 +1,5 @@
 from dev.server_ui import app
-from dotenv import load_dotenv
-import os 
-
-load_dotenv()
+import os
 
 if __name__ == "__main__":
     import uvicorn

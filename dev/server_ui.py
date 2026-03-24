@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import json
-from dotenv import load_dotenv
 from pathlib import Path
 from typing_extensions import Any, Dict
 
@@ -28,7 +27,13 @@ from dev.users_control import (
     get_user_limit_info,
 )
 
-load_dotenv()
+try:
+    from dotenv import load_dotenv
+except Exception:
+    load_dotenv = None
+
+if load_dotenv is not None:
+    load_dotenv()
 
 host = os.getenv("HOST", "0.0.0.0")
 port = int(os.getenv("PORT", "8080"))
