@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import uvicorn
 import json
 from dotenv import load_dotenv
 from pathlib import Path
@@ -353,4 +352,6 @@ def get_context(query: str) -> dict:
 
 
 if __name__ == "__main__":
+    import uvicorn
+
     uvicorn.run(app, host=host, port=port, proxy_headers=True)
