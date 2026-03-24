@@ -84,20 +84,6 @@ mcp = FastMCP("pazy-context")
 async def health(request):
     return JSONResponse({"ok": True})
 
-async def debug_fs(request):
-    """Temporary debug endpoint to inspect the filesystem on Vercel."""
-    import glob
-    info = {
-        "cwd": os.getcwd(),
-        "BASE_DIR": str(BASE_DIR),
-        "PROJECT_ROOT": str(PROJECT_ROOT),
-        "WIDGET_HTML_PATH": str(WIDGET_HTML_PATH),
-        "widget_exists": WIDGET_HTML_PATH.exists(),
-        "__file__": __file__,
-        "var_task_listing": sorted(glob.glob("/var/task/**/*", recursive=True))[:50],
-        "project_root_listing": sorted(glob.glob(str(PROJECT_ROOT / "**/*"), recursive=True))[:50],
-    }
-    return JSONResponse(info)
 
 
 # Streamable HTTP transport — works reliably on Vercel serverless
@@ -107,7 +93,6 @@ mcp_app = mcp.http_app(path="/")
 app = Starlette(
     routes=[
         Route("/healthz", health),
-        Route("/debug-fs", debug_fs),
         Mount("/mcp", app=mcp_app),
     ],
     lifespan=mcp_app.lifespan,
