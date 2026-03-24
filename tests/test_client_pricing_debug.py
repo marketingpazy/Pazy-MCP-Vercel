@@ -11,10 +11,10 @@ TOOL_NAME = "pricing_api"
 OUTPUT_PATH = Path("public/pricing-widget.sample.json")
 
 PAYLOAD = {
-    "codigo_postal": "28016",
-    "edad": 54,
-    "tipo_funeral": "incineracion",
-    "velatorio": False,
+    "codigo_postal": "15005",
+    "edad": 65,
+    "tipo_funeral": "incineración",
+    "velatorio": True,
     "ceremonia": True,
 }
 
@@ -82,6 +82,7 @@ async def main() -> None:
                 encoding="utf-8",
             )
 
+            print(f"\nstructuredContent: {wrapper['structuredContent']}")
             print("\nstructuredContent exportado a:")
             print(OUTPUT_PATH.resolve())
             print("\nAbre el widget local así:")

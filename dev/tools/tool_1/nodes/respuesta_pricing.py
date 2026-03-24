@@ -168,10 +168,10 @@ def _normalize_resultado(resultado: Dict[str, Any], input_data: Dict[str, Any], 
                 "importe_final": to_float(kilometraje.get("importe_final")),
             },
         },
-        # para futuro botón
+        # botón
         "cta": {
             "label": "Solicita tu plan funerario",
-            "url": magic_link,
+            "action": magic_link,
             "enabled": bool(magic_link),
         },
     }
@@ -226,7 +226,7 @@ def _normalize_presupuesto(presupuesto: Dict[str, Any], datos, presupuesto_idx: 
         "edad": to_int(presupuesto.get("edad")),
         "repatriacion": bool(presupuesto.get("repatriacion")),
         "km_traslado_calculados": to_float(presupuesto.get("km_traslado_calculados")),
-        "total_resultados": to_int(presupuesto.get("total_resultados")) or len(normalized_results),
+        "total_resultados": 1,
         "quotes": normalized_results,
         "requiere_contacto_asesor": bool(presupuesto.get("requiere_contacto_asesor")),
     }
@@ -313,14 +313,14 @@ def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
                     "edad": to_int(api_response.get("edad")) or to_int(datos.get("edad")),
                     "repatriacion": False,
                     "km_traslado_calculados": None,
-                    "total_resultados": to_int(api_response.get("total_resultados")) or len(quotes),
+                    "total_resultados": 1,
                     "quotes": quotes,
                     "requiere_contacto_asesor": bool(api_response.get("requiere_contacto_asesor")),
                 }
             ],
             "summary": {
                 "mensaje": clean_text(api_response.get("mensaje")),
-                "total_resultados": to_int(api_response.get("total_resultados")) or len(quotes),
+                "total_resultados": 1,
                 "requiere_contacto_asesor": bool(api_response.get("requiere_contacto_asesor")),
                 "numero_clientes": 1,
                 "presupuestos_generados": 1,
@@ -364,7 +364,7 @@ def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
             "budgets": budgets,
             "summary": {
                 "mensaje": clean_text(api_response.get("mensaje")),
-                "total_resultados": sum(b["total_resultados"] for b in budgets),
+                "total_resultados": 1,
                 "requiere_contacto_asesor": any(b["requiere_contacto_asesor"] for b in budgets),
                 "numero_clientes": to_int(api_response.get("numero_clientes")),
                 "presupuestos_generados": to_int(api_response.get("presupuestos_generados")) or len(budgets),

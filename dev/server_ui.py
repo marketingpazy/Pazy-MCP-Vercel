@@ -1,19 +1,20 @@
 from __future__ import annotations
+
 import os
-import contextlib
 import uvicorn
 import json
 from dotenv import load_dotenv
 from pathlib import Path
-from typing_extensions  import Any, Dict, Optional, TypedDict, List
-from collections import defaultdict
-from mcp.server.fastmcp import FastMCP, Context
+from typing_extensions import Any, Dict
+
+
+from fastmcp import FastMCP, Context
 from fastmcp.server.apps import AppConfig, ResourceCSP
-from fastmcp.server.apps import AppConfig
-from mcp.server.transport_security import TransportSecuritySettings
+from fastmcp.tools import ToolResult
 from starlette.routing import Mount, Route
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
+
 from dev.tools.tool_1.subgraph_tool_1 import create_pricing_subgraph
 from dev.tools.tool_2_3.rag_store import (
     RagSettings,
@@ -29,6 +30,7 @@ from dev.users_control import (
 )
 
 load_dotenv()
+
 host = os.getenv("HOST", "0.0.0.0")
 port = int(os.getenv("PORT", "8080"))
 
@@ -37,7 +39,6 @@ subgraph_pricing = create_pricing_subgraph()
 
 BASE_DIR = Path(__file__).resolve().parent
 WIDGET_URI = cfg("WIDGET_URI", "ui://widget/pricing-widget-v1.html")
-WIDGET_MIME_TYPE = cfg("WIDGET_MIME_TYPE", "text/html;profile=mcp-app")
 WIDGET_HTML_PATH = Path(
     cfg("WIDGET_HTML_PATH", str(BASE_DIR.parent / "public" / "pricing-widget.html"))
 )
@@ -52,54 +53,33 @@ WIDGET_RESOURCE_DOMAINS = [
     "https://fonts.gstatic.com",
 ]
 
-# SDK para despliegues: stateless_http + json_response
-mcp = FastMCP(
-    "pazy-context",
-    stateless_http=True,
-    json_response=True,
-    transport_security=TransportSecuritySettings(
-        enable_dns_rebinding_protection=True,
-        allowed_hosts=[
-            "mcp.pazy.es",
-            "mcp.pazy.es:*",
-            "mcp-pazy-dns-527294618400.europe-west1.run.app",
-            "mcp-pazy-dns-527294618400.europe-west1.run.app:*",
-        ],
-        allowed_origins=[
-            "https://mcp.pazy.es",
-            "https://mcp-pazy-dns-527294618400.europe-west1.run.app",
-        ],
-    ),
-)
-mcp.settings.streamable_http_path = "/"
+EDAD_MIN = cfg("EDAD_MIN", 50)
 
-@contextlib.asynccontextmanager
-async def lifespan(app: Starlette):
-    async with mcp.session_manager.run():
-        yield
+mcp = FastMCP("pazy-context")
 
 async def health(request):
     return JSONResponse({"ok": True})
 
+
+mcp_app = mcp.http_app(path="/")
+
 app = Starlette(
     routes=[
         Route("/healthz", health),
-        Mount("/mcp", app=mcp.streamable_http_app()),
+        Mount("/mcp", app=mcp_app),
     ],
-    lifespan=lifespan,
+    lifespan=mcp_app.lifespan,
 )
+
 
 @mcp.resource(
     WIDGET_URI,
     app=AppConfig(
-        domain="https://mcp.pazy.es",
+        domain=WIDGET_DOMAIN,
         prefers_border=True,
         csp=ResourceCSP(
-            connect_domains=[],
-            resource_domains=[
-                "https://fonts.googleapis.com",
-                "https://fonts.gstatic.com",
-            ],
+            connect_domains=WIDGET_CONNECT_DOMAINS,
+            resource_domains=WIDGET_RESOURCE_DOMAINS,
             # frame_domains=[]  # solo si usas iframes
         ),
     ),
@@ -107,86 +87,57 @@ app = Starlette(
 def pricing_widget() -> str:
     return WIDGET_HTML_PATH.read_text(encoding="utf-8")
 
-"""
-@mcp.resource(WIDGET_URI)
-def pricing_widget():
-    return WIDGET_HTML_PATH.read_text(encoding="utf-8")
-"""
+
 ###################################### TOOLS ###########################################
 ################## TOOL 1 LLAMADA API ###########################
 @mcp.tool(
     app=AppConfig(resource_uri=WIDGET_URI),
     name="pricing_api",
     description=(
-        """Obtiene una cotización real del plan funerario de Pazy usando la API oficial.
+        """Obtiene una cotización real de un plan funerario de Pazy mediante su API oficial.
 
-        Usa esta herramienta únicamente cuando el usuario quiera obtener una cotización
-        del plan funerario de Pazy.
+        Esta herramienta se utiliza cuando el usuario solicita una cotización personalizada
+        basada en sus preferencias y datos básicos.
 
-        IMPORTANTE SOBRE EL LÍMITE DE USO:
-        - El usuario solo dispone de 10 consultas de cotización por usuario cada 24h.
-        - Debes informar al usuario de este límite de forma clara y amable.
-        - Si el usuario alcanza el límite, no debes intentar llamar repetidamente a la herramienta.
-        - Si la herramienta devuelve LIMIT_TRIES_REACHED, informa al usuario de que ha agotado
-          sus 10 consultas disponibles y ofrece derivarlo a un operador o asesor.
+        FUNCIONALIDAD:
+        Devuelve opciones de planes funerarios con precios y condiciones en función de:
+        - edad
+        - código postal
+        - tipo de funeral (incineración o inhumación)
+        - velatorio
+        - ceremonia
 
-        Antes de llamar a esta herramienta debes guiar al usuario paso a paso y confirmar
-        los datos necesarios para la cotización.
+        LÍMITE DE USO:
+        - Cada usuario dispone de hasta 10 consultas de cotización en un periodo de 24 horas.
+        - Si se alcanza el límite, la herramienta devolverá el estado "LIMIT_TRIES_REACHED".
+        - En ese caso, se debe informar al usuario de que no es posible generar más cotizaciones
+        en ese momento y ofrecer alternativas (por ejemplo, contacto con un asesor).
 
-        REGLAS DE RECOGIDA DE DATOS:
-        - Haz solo UNA pregunta cada vez.
-        - No pidas varios datos en el mismo mensaje.
-        - Espera siempre la respuesta del usuario antes de preguntar lo siguiente.
-        - No inventes ni asumas valores que el usuario no haya confirmado.
-        - Esta herramienta solo puede usarse para UNA persona por llamada.
-        - Si el usuario quiere cotización para varias personas, debes tramitar cada persona por separado.
+        REQUISITOS DE DATOS:
+        La herramienta requiere que los siguientes datos estén disponibles y confirmados:
+        - edad (≥ 50 años; el usuario tendrá la opción de ponerse en contacto con un operador o asesor)
+        - código postal en España
+        - tipo de funeral
+        - preferencia de velatorio
+        - preferencia de ceremonia
 
-        FLUJO MÍNIMO QUE DEBES RESPETAR ANTES DE LLAMAR:
-        1. Pregunta si el plan es para la propia persona o para otra persona.
-        2. Pregunta si la persona beneficiaria reside en España.
-        - Si NO reside en España, informa amablemente de que Pazy solo ofrece servicio
-            a personas residentes en España y no llames a esta herramienta.
-        3. Recoge la edad de la persona beneficiaria.
-        - Puedes aceptar fecha de nacimiento si el usuario la da y convertirla a edad.
-        - Si la persona es menor de 50 años, informa amablemente de que el servicio
-            está disponible a partir de los 50 años, no llames a esta herramienta y ofrece derivarlo a un operador o asesor.
-        4. Recoge el código postal.
-        5. Recoge el tipo de funeral: incineracion o inhumacion.
-        6. Pregunta si quiere velatorio.
-        7. Pregunta si quiere ceremonia.
+        CONSIDERACIONES:
+        - El servicio solamente está disponible para personas residentes en España.
+        - Cada ejecución corresponde a una única persona.
+        - Si los datos cambian, se puede generar una nueva cotización (respetando el límite de uso).
 
-        REQUISITOS PARA LLAMAR A LA HERRAMIENTA:
-        - Solo debes llamar a esta herramienta cuando el usuario haya confirmado
-          explícitamente los datos y estén completos.
-        - Después de enseñar los datos, pregunta SIEMPRE al usuario si son correctos.
-        - Los datos obligatorios para llamar son:
-          - edad
-          - codigo_postal
-          - tipo_funeral
-          - velatorio
-          - ceremonia
+        COMPORTAMIENTO:
+        - Los precios mostrados provienen exclusivamente de esta herramienta.
+        - No realiza contratación ni solicita datos personales o de pago.
+        - No modifica datos externos; únicamente consulta información.
 
-        REGLAS DE USO:
-        - Nunca muestres ni inventes precios si no vienen de esta herramienta en este turno.
-        - Si el usuario cambia cualquier dato después de una cotización, debes volver
-          a llamar a esta herramienta para generar una nueva, pero solo si todavía
-          no ha agotado sus 10 consultas.
-        - No inventes pasos de contratación adicionales.
-
-        SCOPE OF THE ASSISTANT:
-        Este asistente únicamente guía al usuario para obtener una cotización.
-
-        Después de mostrar la cotización:
-        - NO solicites datos personales (nombre, teléfono, email, DNI).
-        - NO solicites datos de pago.
-        - NO intentes completar una contratación.
-        - NO envies nunca una url como parte de la respuesta.
-        - NO expliques, ni listes, ni nombres los extras ni sus precios (incluído ceremonia) que tiene un tanatorio.
-        - NO envies el nombre del tanatorio como parte de la respuesta.
-
-        Si el usuario desea continuar con la contratación,
-        indícale que el siguiente paso se realiza a través del proceso
-        oficial de Pazy o con un asesor humano."""
+        RESULTADO:
+        Devuelve una respuesta estructurada con:
+        - listado de cotizaciones
+        - resumen de resultados
+        - información necesaria para representar la UI asociada
+        - No inventar datos.
+        """
     ),
     annotations={
         "readOnlyHint": False,
@@ -218,7 +169,6 @@ def pricing_api(
             "resourceUri": WIDGET_URI,
         },
         "openai/outputTemplate": WIDGET_URI,
-        "widgetMimeType": WIDGET_MIME_TYPE,
         "maxAllowedCalls": limit_info["max_calls"],
         "callsUsed": limit_info["count"],
         "callsRemaining": limit_info["remaining"],
@@ -226,18 +176,13 @@ def pricing_api(
     }
 
     if not can_user_call_pricing(ctx):
-        return {
-            "content": [
-                {
-                    "type": "text",
-                    "text": (
-                        "Has agotado el máximo de 10 consultas permitidas en las últimas 24 horas. "
-                        "Ya no puedo generar una nueva cotización aquí por ahora. "
-                        "Si lo deseas, puedo indicarte cómo continuar con un asesor."
-                    ),
-                }
-            ],
-            "structuredContent": {
+        return ToolResult(
+            content=(
+                """Has agotado el máximo de 10 consultas permitidas en las últimas 24 horas. 
+                    Ya no puedo generar una nueva cotización aquí por ahora. 
+                    Si lo deseas, puedo indicarte cómo continuar con un asesor."""
+            ),
+            structured_content={
                 "ok": False,
                 "error": "LIMIT_TRIES_REACHED",
                 "message": "El usuario ha alcanzado el máximo de 10 consultas en 24 horas.",
@@ -247,13 +192,38 @@ def pricing_api(
                 },
                 "quotes": [],
             },
-            "_meta": {
+            meta={
                 **base_meta,
                 "quoteReady": False,
                 "quoteCount": 0,
                 "apiStatus": None,
             },
-        }
+        )
+
+    if int(edad) < int(EDAD_MIN):
+        return ToolResult(
+            content=(
+                f"""El usuario debe de ser mayor de 50 años. Si el usuario es menor de esa edad deberá 
+                    de ponerse en contacto con un operador tlf: 900 900 516. Se pasará con un operador de su código postal {codigo_postal}"""
+            ),
+            structured_content={
+                "ok": False,
+                "error": "MIN_AGE_NOT_REACHED",
+                "message": f"""El usuario es menor de 50 años. Si el usuario es menor de esa edad deberá 
+                    de ponerse en contacto con un operador tlf: 900 900 516.""",
+                "summary": {
+                    "total_resultados": 0,
+                    "mensaje": "Edad mínima no alanzada.",
+                },
+                "quotes": [],
+            },
+            meta={
+                **base_meta,
+                "quoteReady": False,
+                "quoteCount": 0,
+                "apiStatus": None,
+            },
+        )
 
     state = {
         "datos": {
@@ -269,7 +239,7 @@ def pricing_api(
         "msg_post": None,
         "pricing_normalized": None,
     }
-    print(f"Tool datos: {state.get('datos')}")
+
     out = subgraph_pricing.invoke(state)
 
     api_error = out.get("api_error")
@@ -281,7 +251,6 @@ def pricing_api(
     summary = normalized.get("summary") or {}
     total_resultados = summary.get("total_resultados", 0)
 
-    # Consumimos intento solo cuando la tool realmente se ha ejecutado
     limit_info = consume_pricing_call(ctx)
 
     base_meta = {
@@ -295,25 +264,19 @@ def pricing_api(
     if ok and isinstance(api_status, int) and 200 <= api_status < 300:
         if total_resultados == 0:
             text = "He procesado tu solicitud, pero no he encontrado cotizaciones disponibles."
-        elif total_resultados == 1:
-            text = "He encontrado 1 cotización para ti."
         else:
-            text = f"He encontrado {total_resultados} cotizaciones para ti."
+            text = f"Aquí tienes tu cotización."
 
-        return {
-            "content": [
-                {
-                    "type": "text",
-                    "text": text,
-                }
-            ],
-            "structuredContent": normalized,
-            "_meta": {
+        return ToolResult(
+            content=text,
+            structured_content=normalized,
+            meta={
                 **base_meta,
                 "quoteReady": True,
                 "quoteCount": len(quotes),
+                "preferredOutput": "ui_only",
             },
-        }
+        )
 
     error_code = normalized.get("error") or api_error or "API_CALL_FAILED"
 
@@ -328,24 +291,20 @@ def pricing_api(
             "Si quieres, puedes revisar los datos o probar más tarde."
         )
 
-    return {
-        "content": [
-            {
-                "type": "text",
-                "text": user_text,
-            }
-        ],
-        "structuredContent": {
+    return ToolResult(
+        content=user_text,
+        structured_content={
             **normalized,
             "ok": False,
             "error": error_code,
         },
-        "_meta": {
+        meta={
             **base_meta,
             "quoteReady": False,
             "quoteCount": 0,
         },
-    }
+    )
+
 
 
 ################## TOOL 2 CONTEXTO RAG ###########################
@@ -392,55 +351,6 @@ def get_context(query: str) -> dict:
         },
     }
 
-
-################## TOOL 3 BRAND CONTEXT ###########################
-@mcp.tool(
-    name="brand_context",
-    description=(
-        """Recupera contexto del manual de marca de Pazy para ayudar a responder con el tono,
-        enfoque y estilo adecuados.
-        Usa esta herramienta cuando necesites adaptar la respuesta a la voz de marca de Pazy,
-        por ejemplo en saludos, acompañamiento, explicaciones delicadas o mensajes comerciales.
-        No devuelve precios ni información transaccional."""
-    ),
-    annotations={
-        "readOnlyHint": True,
-        "destructiveHint": False,
-        "idempotentHint": True,
-        "openWorldHint": False,
-    },
-)
-def brand_context(query: str) -> dict:
-    vectorstore = build_or_load_vectorstore(RAG_SETTINGS)
-
-    results = retrieve_brand_rag(vectorstore, query=query, k=3)
-    
-    return {
-        "content": [
-            {
-                "type": "text",
-                "text": json.dumps(
-                    {
-                        "success": True,
-                        "query": query,
-                        "count": len(results),
-                        "results": results,
-                    },
-                    ensure_ascii=False,
-                    indent=2,
-                ),
-            }
-        ],
-        "structuredContent": {
-            "success": True,
-            "query": query,
-            "count": len(results),
-            "results": results,
-        },
-    }
-
-
-################################## Main y /mcp #######################################
 
 if __name__ == "__main__":
     uvicorn.run(app, host=host, port=port, proxy_headers=True)

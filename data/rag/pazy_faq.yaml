@@ -51,6 +51,16 @@ faq_pazy:
       respuesta: >
         Pazy dispone de oficinas en Madrid. La mayor parte de la gestión se realiza
         de forma digital o telefónica para facilitar la atención a nivel nacional.
+  
+  cobertura_horaria:
+      aliases: >
+        - horario llamadas 
+        - horario 
+        - cuando puedo llamar 
+        - a que hora puedo llamar 
+      horario_llamadas: >
+        IMPORTANTE, EL HORARIO DE LLAMADAS COMERCIALES ES DE LUNES A JUEVES DE 
+        9:00 A 18:00 Y VIERNES DE 9:00 A 14:00. 
 
   modelo_servicio:
     es_seguro:

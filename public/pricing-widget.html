@@ -579,6 +579,20 @@
         if (payload?.data?.result?.structuredContent) return payload.data.result.structuredContent;
         if (payload?.structuredContent?.ok !== undefined) return payload.structuredContent;
         if (payload?.ok !== undefined) return payload;
+
+        const textItem =
+          payload?.content?.find?.((item) => item?.type === "text") ??
+          payload?.toolResult?.content?.find?.((item) => item?.type === "text") ??
+          payload?.result?.content?.find?.((item) => item?.type === "text");
+
+        if (textItem?.text) {
+          try {
+            const parsed = JSON.parse(textItem.text);
+            if (parsed?.structuredContent?.ok !== undefined) return parsed.structuredContent;
+            if (parsed?.ok !== undefined) return parsed;
+          } catch (_) {}
+        }
+
         return null;
       };
 
@@ -614,15 +628,38 @@
       const renderStatus = (data) => {
         const error = data?.error;
         const ok = Boolean(data?.ok);
+
         if (ok) {
           statusContainerEl.innerHTML = "";
           return;
         }
-        if (error === "LIMIT_TRIES_REACHED") {
-          statusContainerEl.innerHTML = `<div class="error-state"><h3>Has alcanzado el límite de consultas</h3><p>Ya no se pueden generar más cotizaciones en este chat.</p></div>`;
+
+        if (error === "MIN_AGE_NOT_REACHED") {
+          statusContainerEl.innerHTML = `
+            <div class="error-state">
+              <h3>No se puede generar la cotización</h3>
+              <p>Solo se admiten edades de 50 años o más. Contacta con un operador en el 900 900 516.</p>
+            </div>
+          `;
           return;
         }
-        statusContainerEl.innerHTML = `<div class="error-state"><h3>No se pudo obtener la cotización</h3><p>${escapeHtml(data?.message || "Ha ocurrido un problema al consultar la API.")}</p></div>`;
+
+        if (error === "LIMIT_TRIES_REACHED") {
+          statusContainerEl.innerHTML = `
+            <div class="error-state">
+              <h3>Has alcanzado el límite de consultas</h3>
+              <p>Ya no se pueden generar más cotizaciones en este chat.</p>
+            </div>
+          `;
+          return;
+        }
+
+        statusContainerEl.innerHTML = `
+          <div class="error-state">
+            <h3>No se pudo obtener la cotización</h3>
+            <p>${escapeHtml(data?.message || "Ha ocurrido un problema al consultar la API.")}</p>
+          </div>
+        `;
       };
 
       const deriveCardTitle = (input) => {
@@ -636,7 +673,22 @@
 
       const getMonthlyFee = (quote) => {
         const cuotas = Array.isArray(quote?.cuotas_mensuales) ? quote.cuotas_mensuales : [];
-        return cuotas.find((item) => Number(item?.plazo_anos) === 10) || cuotas[0] || null;
+        if (!cuotas.length) return null;
+
+        const preferred =
+          cuotas.find((item) => Number(item?.plazo_anos) === 10) ||
+          cuotas[0];
+
+        const years = Number(preferred?.plazo_anos);
+        const label =
+          preferred?.label ||
+          (Number.isFinite(years) ? `${years} ${years === 1 ? "año" : "años"}` : "plazo disponible");
+
+        return {
+          ...preferred,
+          years,
+          label,
+        };
       };
 
       const filterPositiveServices = (servicios) => {
@@ -767,8 +819,12 @@
                   <div class="quote-subtitle">${escapeHtml(cardTitle || quote?.nombre || "Cotización")}</div>
 
                   <div class="quote-monthly">
-                    <div class="quote-monthly-label">Pago fraccionado en 10 años</div>
-                    <div class="quote-monthly-value">${cuota ? `${escapeHtml(formatCurrency(cuota.cuota_mensual))}/mes` : "—"}</div>
+                    <div class="quote-monthly-label">
+                      ${cuota ? `Pago fraccionado en ${escapeHtml(cuota.label)}` : "Pago fraccionado"}
+                    </div>
+                    <div class="quote-monthly-value">
+                      ${cuota ? `${escapeHtml(formatCurrency(cuota.cuota_mensual))}/mes` : "—"}
+                    </div>
                   </div>
 
                   <div class="quote-cash">
@@ -784,9 +840,9 @@
 
                 <div class="actions">
                   ${
-                    quote?.cta?.url
+                    quote?.cta?.action
                       ? `<a 
-                          href="${escapeHtml(quote.cta.url)}" 
+                          href="${escapeHtml(quote.cta.action)}" 
                           class="button" 
                           target="_blank"
                         >

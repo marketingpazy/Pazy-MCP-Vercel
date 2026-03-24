@@ -1,5 +1,5 @@
 from typing import Any, Dict
-
+import unicodedata
 from typing import Any, Dict, List
 
 
@@ -14,6 +14,13 @@ TIPIFICADOS = [
 ]
 
 
+def remove_accents(text: str) -> str:
+    if not text:
+        return ""
+    return "".join(
+        c for c in unicodedata.normalize("NFD", text)
+        if unicodedata.category(c) != "Mn"
+    )
 
 def _paquete_desde_flags(velatorio: Any) -> str:
     if velatorio == "false" :
@@ -25,7 +32,8 @@ def tratar_datos(state: Dict[str, Any]) -> Dict[str, Any]:
 
     cp = str(datos.get("codigo_postal", "")).strip() 
     edad = datos.get("edad", None) 
-    destino_final = (datos.get("destino_final") or "").strip().lower() 
+    raw_destino = (datos.get("destino_final") or "").strip()
+    destino_final = remove_accents(raw_destino).lower()
     velatorio = str(datos.get("velatorio")).strip().lower() 
     ceremonia = str(datos.get("ceremonia")).strip().lower()
     
