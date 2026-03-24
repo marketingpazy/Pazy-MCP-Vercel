@@ -66,7 +66,27 @@ WIDGET_HTML_PATH = next(
     _widget_candidates[0],  # fallback
 )
 
-WIDGET_DOMAIN = os.getenv("WIDGET_DOMAIN", "https://mcppazy.vercel.app")
+# Auto-detect domain: WIDGET_DOMAIN env var > VERCEL_PROJECT_PRODUCTION_URL > VERCEL_URL > fallback
+def _resolve_widget_domain() -> str:
+    # 1. Explicit override — always wins
+    explicit = os.getenv("WIDGET_DOMAIN")
+    if explicit:
+        return explicit
+
+    # 2. Vercel production URL (e.g. "mcp-pazy.vercel.app") — stable across deploys
+    prod_url = os.getenv("VERCEL_PROJECT_PRODUCTION_URL")
+    if prod_url:
+        return f"https://{prod_url}"
+
+    # 3. Vercel deployment URL (changes per deploy, but always available)
+    vercel_url = os.getenv("VERCEL_URL")
+    if vercel_url:
+        return f"https://{vercel_url}"
+
+    # 4. Local dev fallback
+    return f"http://localhost:{port}"
+
+WIDGET_DOMAIN = _resolve_widget_domain()
 
 WIDGET_CONNECT_DOMAINS = [
     # Añadir APIs externas solo si el widget hace fetch directamente.
