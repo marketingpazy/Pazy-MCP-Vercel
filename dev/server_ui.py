@@ -42,11 +42,23 @@ RAG_SETTINGS = RagSettings()
 subgraph_pricing = create_pricing_subgraph()
 
 BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent
+
 WIDGET_URI = cfg("WIDGET_URI", "ui://widget/pricing-widget-v1.html")
-WIDGET_HTML_PATH = Path(
-    cfg("WIDGET_HTML_PATH", str(BASE_DIR.parent / "public" / "pricing-widget.html"))
-)
-WIDGET_DOMAIN = "https://mcp-pazy.vercel.app"
+
+# Resolve widget path — always relative to project root, not CWD
+_widget_cfg = cfg("WIDGET_HTML_PATH")
+if _widget_cfg:
+    _candidate = Path(_widget_cfg)
+    if not _candidate.is_absolute():
+        # Strip leading "./" and resolve against project root
+        WIDGET_HTML_PATH = (PROJECT_ROOT / _candidate).resolve()
+    else:
+        WIDGET_HTML_PATH = _candidate
+else:
+    WIDGET_HTML_PATH = PROJECT_ROOT / "public" / "pricing-widget.html"
+
+WIDGET_DOMAIN = os.getenv("WIDGET_DOMAIN", "https://mcppazy.vercel.app")
 
 WIDGET_CONNECT_DOMAINS = [
     # Añadir APIs externas solo si el widget hace fetch directamente.
@@ -65,7 +77,9 @@ async def health(request):
     return JSONResponse({"ok": True})
 
 
-mcp_app = mcp.http_app(path="/sse", transport="sse")
+# Streamable HTTP transport — works reliably on Vercel serverless
+# ChatGPT and Claude both support this transport
+mcp_app = mcp.http_app(path="/")
 
 app = Starlette(
     routes=[
