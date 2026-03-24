@@ -46,17 +46,25 @@ PROJECT_ROOT = BASE_DIR.parent
 
 WIDGET_URI = cfg("WIDGET_URI", "ui://widget/pricing-widget-v1.html")
 
-# Resolve widget path — always relative to project root, not CWD
+# Resolve widget path — try multiple locations for compatibility
+# On Vercel serverless, only dev/ is bundled in the function (Python imports)
+# On local dev, public/ is available too
+_widget_candidates = [
+    BASE_DIR / "pricing-widget.html",                    # dev/pricing-widget.html (Vercel)
+    PROJECT_ROOT / "public" / "pricing-widget.html",     # public/ (local dev)
+]
 _widget_cfg = cfg("WIDGET_HTML_PATH")
 if _widget_cfg:
     _candidate = Path(_widget_cfg)
     if not _candidate.is_absolute():
-        # Strip leading "./" and resolve against project root
-        WIDGET_HTML_PATH = (PROJECT_ROOT / _candidate).resolve()
+        _widget_candidates.insert(0, (PROJECT_ROOT / _candidate).resolve())
     else:
-        WIDGET_HTML_PATH = _candidate
-else:
-    WIDGET_HTML_PATH = PROJECT_ROOT / "public" / "pricing-widget.html"
+        _widget_candidates.insert(0, _candidate)
+
+WIDGET_HTML_PATH = next(
+    (p for p in _widget_candidates if p.exists()),
+    _widget_candidates[0],  # fallback
+)
 
 WIDGET_DOMAIN = os.getenv("WIDGET_DOMAIN", "https://mcppazy.vercel.app")
 
@@ -76,6 +84,21 @@ mcp = FastMCP("pazy-context")
 async def health(request):
     return JSONResponse({"ok": True})
 
+async def debug_fs(request):
+    """Temporary debug endpoint to inspect the filesystem on Vercel."""
+    import glob
+    info = {
+        "cwd": os.getcwd(),
+        "BASE_DIR": str(BASE_DIR),
+        "PROJECT_ROOT": str(PROJECT_ROOT),
+        "WIDGET_HTML_PATH": str(WIDGET_HTML_PATH),
+        "widget_exists": WIDGET_HTML_PATH.exists(),
+        "__file__": __file__,
+        "var_task_listing": sorted(glob.glob("/var/task/**/*", recursive=True))[:50],
+        "project_root_listing": sorted(glob.glob(str(PROJECT_ROOT / "**/*"), recursive=True))[:50],
+    }
+    return JSONResponse(info)
+
 
 # Streamable HTTP transport — works reliably on Vercel serverless
 # ChatGPT and Claude both support this transport
@@ -84,6 +107,7 @@ mcp_app = mcp.http_app(path="/")
 app = Starlette(
     routes=[
         Route("/healthz", health),
+        Route("/debug-fs", debug_fs),
         Mount("/mcp", app=mcp_app),
     ],
     lifespan=mcp_app.lifespan,

@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Cotización pazy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+  :root {
+    --brand: #12c8cf;
+    --brand-dark: #168ea1;
+    --brand-deep: #0f8192;
+    --brand-soft: #d7eef0;
+    --brand-border: #25d2d7;
+
+    --page: #ffffff;
+    --card-bg: #ffffff;
+    --text: #617287;
+    --text-strong: #168ea1;
+    --text-soft: #93a1af;
+
+    --line: #cfeff1;
+    --ok-bg: #dff8fb;
+    --ok: #27b7ca;
+
+    --danger-bg: #ffe2dd;
+    --danger: #ff5a4f;
+
+    --shadow: 0 8px 18px rgba(10, 76, 92, 0.08);
+    --radius-card: 24px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+    --radius-pill: 999px;
+
+    --font: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --transition: 0.18s ease;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    width: 100%;
+    min-height: 100%;
+    background: var(--page);
+  }
+
+  body {
+    padding: 14px;
+    font-family: var(--font);
+    font-size: 15px;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  main {
+    width: 100%;
+    max-width: 1040px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .panel {
+    background: #fff;
+    border-radius: 18px;
+    padding: 14px 16px;
+    border: 1px solid #ebeff2;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  }
+
+  .brand-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .brand-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .brand-logo svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .brand-name {
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: var(--brand-dark);
+    letter-spacing: -0.02em;
+  }
+
+  .summary-message {
+    font-size: 0.92rem;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px;
+  }
+
+  .summary-item {
+    background: #f6fbfb;
+    border: 1px solid #d8eff1;
+    border-radius: 14px;
+    padding: 10px 12px;
+  }
+
+  .summary-item .label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--brand-dark);
+  }
+
+  .summary-item .value {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .cards {
+    display: flex;
+    flex-direction: row;
+    gap: 18px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 2px 4px 8px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(18, 200, 207, 0.35) transparent;
+    cursor: grab;
+  }
+
+  .cards.dragging {
+    cursor: grabbing;
+    scroll-snap-type: none;
+  }
+
+  .cards::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .cards::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .cards::-webkit-scrollbar-thumb {
+    background: rgba(18, 200, 207, 0.35);
+    border-radius: 999px;
+  }
+
+  .quote-card {
+    flex: 0 0 420px;
+    scroll-snap-align: start;
+    background: var(--card-bg);
+    border: 2px solid var(--brand-border);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    min-height: 760px;
+  }
+
+  .quote-top {
+    padding: 0;
+    background: transparent;
+    border-bottom: none;
+    display: block;
+  }
+
+  .quote-hero {
+    height: 150px;
+    background: var(--brand-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 22px 22px 0;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .quote-hero-logo-img {
+    display: block;
+    width: 200px;
+    max-width: 80%;
+    height: auto;
+    flex-shrink: 1;
+  }
+
+  .quote-head {
+    padding: 26px 22px 0;
+  }
+
+  .quote-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .quote-title {
+    font-size: 1.45rem;
+    line-height: 1.05;
+    font-weight: 800;
+    color: var(--text-strong);
+    letter-spacing: -0.03em;
+    max-width: 190px;
+  }
+
+  .quote-price-main {
+    font-size: 2rem;
+    line-height: 0.95;
+    font-weight: 600;
+    color: var(--text-strong);
+    white-space: nowrap;
+    letter-spacing: -0.04em;
+  }
+
+  .quote-subtitle {
+    margin-top: 10px;
+    font-size: 1rem;
+    line-height: 1.2;
+    font-weight: 500;
+    color: var(--text);
+    max-width: 220px;
+    letter-spacing: -0.01em;
+  }
+
+  .quote-monthly {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 14px;
+    margin-top: 18px;
+    color: var(--text);
+  }
+
+  .quote-monthly-label,
+  .quote-monthly-value {
+    font-size: 1rem;
+    line-height: 1.3;
+    font-weight: 700;
+  }
+
+  .quote-monthly-value {
+    white-space: nowrap;
+  }
+
+  .chevron-icon {
+    width: 24px;
+    height: auto;
+    display: block;
+  }
+
+  .quote-cash {
+    margin-top: 24px;
+    background: #d7eaed;
+    padding: 16px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    color: var(--text-strong);
+  }
+
+  .quote-cash-label {
+    font-size: 1rem;
+    line-height: 1.3;
+    font-weight: 700;
+  }
+
+  .quote-cash-value {
+    font-size: 1rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .quote-body {
+    padding: 28px 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    flex: 1;
+  }
+
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 0 10px 16px;
+    border-bottom: 2px solid var(--line);
+  }
+
+  .section-title {
+    font-size: 1.18rem;
+    font-weight: 500;
+    color: var(--brand-dark);
+    letter-spacing: -0.02em;
+    text-transform: none;
+    margin: 0;
+  }
+
+  .section-chevron {
+    font-size: 1.35rem;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .section-toggle {
+    width: 100%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .section-toggle:hover {
+    opacity: 0.92;
+  }
+
+  .section-chevron {
+    transition: transform 0.18s ease;
+  }
+
+  .section-chevron.is-open {
+    transform: rotate(180deg);
+  }
+
+  .services-more {
+    padding: 8px 10px 0;
+  }
+
+  .services-more-button {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--brand-dark);
+    font-family: var(--font);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 6px 0;
+  }
+
+  .bullet-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 0 8px;
+  }
+
+  .bullet-list li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1rem;
+    line-height: 1.35;
+    color: var(--text);
+  }
+
+  .bullet-list li::before {
+    content: "✓";
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    background: var(--ok-bg);
+    color: var(--ok);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 34px;
+    font-weight: 800;
+    font-size: 1.05rem;
+    margin-top: 0;
+  }
+
+  .warning-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .warning {
+    border-radius: 12px;
+    padding: 11px 12px;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+    color: #9a3412;
+    font-size: 0.9rem;
+  }
+
+  .actions {
+    margin-top: auto;
+    padding-top: 16px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .button {
+    width: 78%;
+    min-height: 78px;
+    appearance: none;
+    border: none;
+    border-radius: 18px;
+    padding: 16px 20px;
+    font-family: var(--font);
+    font-size: 1.22rem;
+    line-height: 1.2;
+    font-weight: 500;
+    background: var(--brand-dark);
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.1s ease, background var(--transition), opacity var(--transition);
+    letter-spacing: -0.01em;
+    box-shadow: 0 6px 14px rgba(22, 142, 161, 0.18);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .button:hover {
+    text-decoration: none;
+  }
+  .button:hover:not(:disabled) {
+    background: var(--brand-deep);
+  }
+
+  .button:active:not(:disabled) {
+    transform: scale(0.985);
+  }
+
+  .button:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .footer-note {
+    display: none;
+  }
+
+  .empty-state,
+  .error-state,
+  .debug-state {
+    padding: 18px;
+    border-radius: 16px;
+    text-align: center;
+  }
+
+  .empty-state {
+    background: #f6fbfb;
+    border: 1px solid #d8eff1;
+    color: var(--text);
+  }
+
+  .error-state {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+  }
+
+  .debug-state {
+    background: #f7f7f8;
+    border: 1px solid #e5e5ea;
+    color: #6e6e73;
+  }
+
+  .empty-state h3,
+  .error-state h3,
+  .debug-state h3 {
+    margin-bottom: 6px;
+    font-size: 0.96rem;
+  }
+
+  @media (max-width: 640px) {
+    body {
+      padding: 10px;
+    }
+
+    .quote-card {
+      flex-basis: 326px;
+      min-height: 710px;
+    }
+
+    .quote-hero {
+      height: 124px;
+      margin: 18px 18px 0;
+    }
+
+    .quote-head {
+      padding: 22px 18px 0;
+    }
+
+    .quote-title {
+      font-size: 1.58rem;
+      max-width: 180px;
+    }
+
+    .quote-price-main {
+      font-size: 2.15rem;
+    }
+
+    .quote-subtitle {
+      font-size: 1.1rem;
+      max-width: 220px;
+    }
+
+    .quote-body {
+      padding: 24px 18px 20px;
+    }
+
+    .button {
+      width: 84%;
+      min-height: 70px;
+      font-size: 1.08rem;
+    }
+  }
+</style>
+  </head>
+  <body>
+    <main>
+      <section class="panel">
+        <div class="brand-row">
+          <div class="brand-logo">
+            <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="256" height="256" rx="46" fill="#0B8698"/><path d="M132.004 48C120.606 48 109.907 51.0392 100.637 56.3707C100.41 52.5502 97.2978 49.5282 93.4957 49.5282H75.1583C71.2048 49.5282 68 52.7992 68 56.8343V216.702C68 220.729 71.2048 224 75.1583 224H76.1172C89.6684 224 100.654 212.788 100.654 198.965V170.281C109.915 175.604 120.615 178.644 132.004 178.644C167.35 178.644 196 149.402 196 113.326C196 77.2503 167.35 48 132.004 48ZM163.901 113.695V114.167C163.666 139.657 144.109 160.417 119.462 161.945H119.319C118.663 161.928 118.133 161.378 118.133 160.709C118.133 160.322 118.31 159.979 118.579 159.756C118.63 159.721 118.672 159.687 118.722 159.653C123.475 156.158 127.252 151.368 129.548 145.779C115.072 144.645 103.304 133.665 100.662 119.387C100.301 117.421 100.107 115.395 100.107 113.317C100.107 111.24 100.301 109.214 100.662 107.248C101.075 104.981 101.722 102.809 102.572 100.74C107.4 88.9951 118.764 80.7532 132.013 80.7532C149.055 80.7532 162.976 94.3953 163.868 111.575V111.643C163.893 112.27 163.91 112.897 163.91 113.532V113.687H163.901V113.695Z" fill="#DEFEFF"/></svg>
+          </div>
+          <span class="brand-name">pazy</span>
+        </div>
+      </section>
+
+      <section id="status-container"></section>
+      <section id="cards" class="cards"></section>
+    </main>
+
+    <script type="module">
+      const statusContainerEl = document.querySelector("#status-container");
+      const cardsEl = document.querySelector("#cards");
+
+      const DEBUG_LOCAL = new URLSearchParams(window.location.search).get("debug") === "1";
+      const DEBUG_PAYLOAD_URL = new URLSearchParams(window.location.search).get("payload") || "./pricing-widget.sample.json";
+
+      let latestToolResult = null;
+      const searchParams = new URLSearchParams(window.location.search);
+      const DEBUG_MODE = searchParams.get("debug") === "1";
+      const DEBUG_SAMPLE_URL = "./pricing-widget.sample.json";
+      const expandedCards = new Set();
+      const MAX_VISIBLE_SERVICES = 3;
+
+      const extractStructuredContent = (payload) => {
+        if (payload?.structuredContent?.result?.structuredContent) return payload.structuredContent.result.structuredContent;
+        if (payload?.result?.structuredContent) return payload.result.structuredContent;
+        if (payload?.toolResult?.structuredContent?.result?.structuredContent) return payload.toolResult.structuredContent.result.structuredContent;
+        if (payload?.toolResult?.result?.structuredContent) return payload.toolResult.result.structuredContent;
+        if (payload?.data?.structuredContent?.result?.structuredContent) return payload.data.structuredContent.result.structuredContent;
+        if (payload?.data?.result?.structuredContent) return payload.data.result.structuredContent;
+        if (payload?.structuredContent?.ok !== undefined) return payload.structuredContent;
+        if (payload?.ok !== undefined) return payload;
+
+        const textItem =
+          payload?.content?.find?.((item) => item?.type === "text") ??
+          payload?.toolResult?.content?.find?.((item) => item?.type === "text") ??
+          payload?.result?.content?.find?.((item) => item?.type === "text");
+
+        if (textItem?.text) {
+          try {
+            const parsed = JSON.parse(textItem.text);
+            if (parsed?.structuredContent?.ok !== undefined) return parsed.structuredContent;
+            if (parsed?.ok !== undefined) return parsed;
+          } catch (_) {}
+        }
+
+        return null;
+      };
+
+      const formatCurrency = (value, max = 2) => {
+        const num = Number(value);
+        if (Number.isNaN(num)) return "—";
+
+        return new Intl.NumberFormat("es-ES", {
+          style: "currency",
+          currency: "EUR",
+          maximumFractionDigits: max,
+          minimumFractionDigits: max === 0 ? 0 : 2,
+          useGrouping: true,
+        }).format(num);
+      };
+
+      const formatBoolean = (value) => {
+        if (value === true) return "Sí";
+        if (value === false) return "No";
+        return "—";
+      };
+
+      const getInputData = (data) => (data?.input && typeof data.input === "object" ? data.input : {});
+
+      const escapeHtml = (value) =>
+        String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+
+      const renderStatus = (data) => {
+        const error = data?.error;
+        const ok = Boolean(data?.ok);
+
+        if (ok) {
+          statusContainerEl.innerHTML = "";
+          return;
+        }
+
+        if (error === "MIN_AGE_NOT_REACHED") {
+          statusContainerEl.innerHTML = `
+            <div class="error-state">
+              <h3>No se puede generar la cotización</h3>
+              <p>Solo se admiten edades de 50 años o más. Contacta con un operador en el 900 900 516.</p>
+            </div>
+          `;
+          return;
+        }
+
+        if (error === "LIMIT_TRIES_REACHED") {
+          statusContainerEl.innerHTML = `
+            <div class="error-state">
+              <h3>Has alcanzado el límite de consultas</h3>
+              <p>Ya no se pueden generar más cotizaciones en este chat.</p>
+            </div>
+          `;
+          return;
+        }
+
+        statusContainerEl.innerHTML = `
+          <div class="error-state">
+            <h3>No se pudo obtener la cotización</h3>
+            <p>${escapeHtml(data?.message || "Ha ocurrido un problema al consultar la API.")}</p>
+          </div>
+        `;
+      };
+
+      const deriveCardTitle = (input) => {
+        const raw = input?.destino_final || "";
+        const destino = raw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const velatorio = input?.velatorio;
+        if (destino === "incineracion") return velatorio ? "Incineración con velatorio" : "Incineración sin velatorio";
+        if (destino === "inhumacion") return velatorio ? "Inhumación con velatorio" : "Inhumación sin velatorio";
+        return "Plan funerario";
+      };
+
+      const getMonthlyFee = (quote) => {
+        const cuotas = Array.isArray(quote?.cuotas_mensuales) ? quote.cuotas_mensuales : [];
+        if (!cuotas.length) return null;
+
+        const preferred =
+          cuotas.find((item) => Number(item?.plazo_anos) === 10) ||
+          cuotas[0];
+
+        const years = Number(preferred?.plazo_anos);
+        const label =
+          preferred?.label ||
+          (Number.isFinite(years) ? `${years} ${years === 1 ? "año" : "años"}` : "plazo disponible");
+
+        return {
+          ...preferred,
+          years,
+          label,
+        };
+      };
+
+      const filterPositiveServices = (servicios) => {
+        return (Array.isArray(servicios) ? servicios : []).filter((s) => {
+          const t = String(s).toLowerCase();
+          if (t.includes("no ")) return false;
+          if (t.includes("sin ")) return false;
+          if (t.includes("no incluye")) return false;
+          if (t.includes("no incluido")) return false;
+          return true;
+        });
+      };
+
+      const logoHero = `
+        <svg
+          class="quote-hero-logo-img"
+          viewBox="0 0 560 229"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-label="pazy"
+          role="img"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          <path d="M106.863 52.5825C97.4987 52.5825 88.708 55.0429 81.0921 59.359C80.9055 56.2662 78.3485 53.8197 75.2247 53.8197H60.1588C56.9107 53.8197 54.2776 56.4677 54.2776 59.7343V189.155C54.2776 192.415 56.9107 195.063 60.1588 195.063H60.9467C72.0802 195.063 81.1059 185.986 81.1059 174.796V151.575C88.7149 155.884 97.5056 158.345 106.863 158.345C135.903 158.345 159.442 134.672 159.442 105.467C159.442 76.2621 135.903 52.5825 106.863 52.5825ZM133.069 105.766V106.148C132.876 126.784 116.808 143.589 96.5588 144.826H96.4414C95.9023 144.812 95.4669 144.368 95.4669 143.826C95.4669 143.513 95.612 143.235 95.8332 143.054C95.8747 143.026 95.9092 142.998 95.9507 142.971C99.8554 140.142 102.958 136.264 104.845 131.739C92.9513 130.822 83.2829 121.932 81.1128 110.374C80.8157 108.782 80.6567 107.142 80.6567 105.46C80.6567 103.778 80.8157 102.138 81.1128 100.546C81.4515 98.7114 81.9836 96.953 82.6816 95.278C86.6485 85.77 95.9852 79.0978 106.87 79.0978C120.872 79.0978 132.309 90.1417 133.042 104.049V104.105C133.063 104.612 133.076 105.12 133.076 105.634V105.759H133.069V105.766Z" fill="#00C6CC"/>
+          <path d="M268.892 53.8185H255.253C252.003 53.8185 249.362 56.494 249.362 59.7946V64.4434C240.775 57.0277 229.846 52.5825 217.94 52.5825C190.315 52.5825 167.923 76.5009 167.923 106.009C167.923 135.517 190.315 159.443 217.94 159.443C229.846 159.443 240.775 155.005 249.362 147.589V151.135C249.362 154.436 252.003 157.104 255.253 157.104H268.892C272.142 157.104 274.783 154.436 274.783 151.135V59.7946C274.783 56.494 272.142 53.8185 268.892 53.8185ZM221.197 132.645C206.685 132.645 194.917 120.721 194.917 106.009C194.917 91.2972 206.685 79.3801 221.197 79.3801C235.709 79.3801 247.484 91.3042 247.484 106.009C247.484 120.714 235.716 132.645 221.197 132.645Z" fill="#00C6CC"/>
+          <path d="M385.054 79.0784C387.392 76.9474 388.72 73.9405 388.72 70.7888V60.2302C388.72 56.9406 386.035 54.2786 382.717 54.2786H297.673C294.411 54.2786 291.76 56.8992 291.76 60.1406V73.7957C291.76 77.0301 294.411 79.6577 297.673 79.6577H347.294L295.412 131.25C293.075 133.381 291.746 136.388 291.746 139.54V150.099C291.746 153.388 294.432 156.05 297.75 156.05H384.213C387.475 156.05 390.126 153.43 390.126 150.188V136.533C390.126 133.299 387.475 130.671 384.213 130.671H333.172L385.054 79.0784Z" fill="#00C6CC"/>
+          <path d="M505.466 60.1559V149.879C505.466 178.24 482.833 201.766 454.59 201.847C447.991 201.868 441.69 200.628 435.898 198.353C432.601 197.059 431.191 193.143 432.893 190.03L436.746 182.981C439.228 178.438 444.261 175.802 449.361 176.605C450.738 176.823 452.142 176.932 453.58 176.932C458.151 176.932 462.458 175.795 466.236 173.786C474.782 169.236 480.615 160.231 480.663 149.858V149.831C472.815 157.194 463.367 159.598 453.865 159.598C452.4 159.598 450.989 159.557 449.612 159.462C442.036 158.978 435.64 157.092 429.115 153.352H429.108C428.247 152.862 427.406 152.344 426.579 151.799C418.473 146.528 411.888 139.083 407.615 130.276C407.309 129.65 407.018 129.016 406.74 128.376C403.837 121.756 402.222 114.427 402.222 106.703V60.1559C402.222 56.7299 404.963 53.9578 408.354 53.9578H422.984C426.111 53.9578 428.688 56.328 429.061 59.393C429.095 59.6382 429.108 59.897 429.108 60.1559V106.703C429.108 114.904 432.805 122.232 438.604 127.075C439.764 128.049 441.012 128.921 442.328 129.684C446.139 131.877 449.158 132.429 453.865 132.429C458.572 132.429 462.275 131.877 466.087 129.684C467.192 129.043 468.237 128.328 469.214 127.531C475.182 122.695 478.58 115.162 478.58 106.703V60.1559C478.58 59.897 478.594 59.6382 478.628 59.393C479.001 56.328 481.585 53.9578 484.712 53.9578H499.22C502.597 53.9578 505.405 56.7435 505.466 60.1559Z" fill="#00C6CC"/>
+        </svg>
+      `;
+
+      const renderQuotes = (data) => {
+        const quotes = Array.isArray(data?.quotes) ? data.quotes : [];
+        cardsEl.innerHTML = "";
+
+        if (!data?.ok) return;
+
+        if (!quotes.length) {
+          cardsEl.innerHTML = `<div class="empty-state"><h3>Buscando</h3><p>Estamos preparando tu cotización.</p></div>`;
+          return;
+        }
+
+        const MAX_VISIBLE_SERVICES = 3;
+
+        cardsEl.innerHTML = quotes.map((quote, index) => {
+          const inputData = getInputData(data);
+          const cardTitle = deriveCardTitle(inputData);
+          const cuota = getMonthlyFee(quote);
+          const avisos = Array.isArray(quote?.avisos) ? quote.avisos : [];
+          const serviciosFiltrados = filterPositiveServices(quote?.servicios_incluidos);
+
+          const cardKey = String(quote?.id ?? index);
+          const isExpanded = expandedCards.has(cardKey);
+          const hasToggle = serviciosFiltrados.length > MAX_VISIBLE_SERVICES;
+          const visibleServices = isExpanded
+            ? serviciosFiltrados
+            : serviciosFiltrados.slice(0, MAX_VISIBLE_SERVICES);
+
+          const serviciosHtml = serviciosFiltrados.length
+            ? `
+              <div>
+                <button
+                  class="section-head section-toggle"
+                  type="button"
+                  data-card-toggle="${escapeHtml(cardKey)}"
+                  aria-expanded="${isExpanded ? "true" : "false"}"
+                >
+                  <div class="section-title">Servicios incluidos en tu plan</div>
+                  <div class="section-chevron ${isExpanded ? "is-open" : ""}">
+                    <svg 
+                      class="chevron-icon" 
+                      viewBox="0 0 100 60" 
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path 
+                        d="M10 10 L50 50 L90 10" 
+                        fill="none" 
+                        stroke="currentColor"
+                        stroke-width="12" 
+                        stroke-linecap="round" 
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </div>
+                </button>
+
+                <ul class="bullet-list ${isExpanded ? "expanded" : "collapsed"}">
+                  ${visibleServices.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+                </ul>
+
+                ${
+                  hasToggle
+                    ? `<div class="services-more">
+                        <button
+                          class="services-more-button"
+                          type="button"
+                          data-card-toggle="${escapeHtml(cardKey)}"
+                          aria-expanded="${isExpanded ? "true" : "false"}"
+                        >
+                          ${isExpanded ? "Ver menos" : `Ver ${serviciosFiltrados.length - MAX_VISIBLE_SERVICES} más`}
+                        </button>
+                      </div>`
+                    : ""
+                }
+              </div>
+            `
+            : "";
+
+          const avisosHtml = avisos.length
+            ? `<div>
+                <div class="warning-list">
+                  <div class="warning">
+                    Los extras deberán ser contratados en el tanatorio
+                  </div>
+                </div>
+              </div>`
+            : "";
+
+          return `
+            <article class="quote-card">
+              <div class="quote-top">
+                <div class="quote-hero">${logoHero}</div>
+
+                <div class="quote-head">
+                  <div class="quote-title-row">
+                    <div class="quote-title">Plan Funerario</div>
+                    <div class="quote-price-main">${escapeHtml(formatCurrency(quote?.precio_total ?? quote?.precio_total, 0))}</div>
+                  </div>
+
+                  <div class="quote-subtitle">${escapeHtml(cardTitle || quote?.nombre || "Cotización")}</div>
+
+                  <div class="quote-monthly">
+                    <div class="quote-monthly-label">
+                      ${cuota ? `Pago fraccionado en ${escapeHtml(cuota.label)}` : "Pago fraccionado"}
+                    </div>
+                    <div class="quote-monthly-value">
+                      ${cuota ? `${escapeHtml(formatCurrency(cuota.cuota_mensual))}/mes` : "—"}
+                    </div>
+                  </div>
+
+                  <div class="quote-cash">
+                    <div class="quote-cash-label">Precio descuento por pago único</div>
+                    <div class="quote-cash-value">${escapeHtml(formatCurrency(quote?.precio_contado, 0))}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="quote-body">
+                ${serviciosHtml}
+                ${avisosHtml}
+
+                <div class="actions">
+                  ${
+                    quote?.cta?.action
+                      ? `<a 
+                          href="${escapeHtml(quote.cta.action)}" 
+                          class="button" 
+                          target="_blank"
+                        >
+                          ${escapeHtml(quote?.cta?.label || "Continuar")}
+                        </a>`
+                      : `<button class="button" disabled>
+                          ${escapeHtml(quote?.cta?.label || "No disponible")}
+                        </button>`
+                  }
+                </div>
+
+                <div class="footer-note">Esta vista muestra la información devuelta por la cotización actual.</div>
+              </div>
+            </article>
+          `;
+        }).join("");
+
+        cardsEl.querySelectorAll("[data-card-toggle]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const key = button.getAttribute("data-card-toggle");
+            if (!key) return;
+
+            if (expandedCards.has(key)) {
+              expandedCards.delete(key);
+            } else {
+              expandedCards.add(key);
+            }
+
+            renderQuotes(data);
+          });
+        });
+      };
+
+      const renderSummary = (data) => {
+        const summary = data?.summary ?? {};
+        const inputData = getInputData(data);
+
+        statusContainerEl.innerHTML = `
+          <div class="panel">
+            <div class="summary-message">${escapeHtml(summary?.mensaje || (data?.ok ? "Estas son las cotizaciones que hemos encontrado para ti." : "No se ha podido obtener una cotización."))}</div>
+            <div class="summary-grid">
+              <div class="summary-item"><span class="label">Código postal</span><span class="value">${escapeHtml(inputData.codigo_postal ?? "—")}</span></div>
+              <div class="summary-item"><span class="label">Edad</span><span class="value">${escapeHtml(inputData.edad ?? "—")}</span></div>
+              <div class="summary-item"><span class="label">Paquete</span><span class="value">${escapeHtml(inputData.paquete ?? "—")}</span></div>
+              <div class="summary-item"><span class="label">Destino final</span><span class="value">${escapeHtml(inputData.destino_final ?? "—")}</span></div>
+              <div class="summary-item"><span class="label">Velatorio</span><span class="value">${escapeHtml(formatBoolean(inputData.velatorio))}</span></div>
+              <div class="summary-item"><span class="label">Ceremonia</span><span class="value">${escapeHtml(formatBoolean(inputData.ceremonia))}</span></div>
+              <div class="summary-item"><span class="label">Resultados</span><span class="value">${escapeHtml(summary.total_resultados ?? 0)}</span></div>
+            </div>
+          </div>
+        `;
+      };
+
+      const renderFromToolResult = (toolResult) => {
+        latestToolResult = toolResult;
+        const data = extractStructuredContent(toolResult);
+
+        console.log("pricing-widget payload recibido:", toolResult);
+        console.log("pricing-widget structuredContent:", data);
+
+        if (!data) {
+          renderSummary({});
+          renderStatus({
+            ok: false,
+            error: "INVALID_WIDGET_PAYLOAD",
+            message: "La interfaz recibió una respuesta, pero no encontró structuredContent.",
+          });
+          renderQuotes({});
+          return;
+        }
+
+        renderSummary(data);
+        renderStatus(data);
+        renderQuotes(data);
+      };
+
+      let rpcId = 0;
+      const pendingRequests = new Map();
+      const rpcNotify = (method, params) => window.parent.postMessage({ jsonrpc: "2.0", method, params }, "*");
+      const rpcRequest = (method, params) => new Promise((resolve, reject) => {
+        const id = ++rpcId;
+        pendingRequests.set(id, { resolve, reject });
+        window.parent.postMessage({ jsonrpc: "2.0", id, method, params }, "*");
+      });
+
+      const initializeBridge = async () => {
+        const appInfo = { name: "pricing-widget", version: "0.1.0" };
+        const appCapabilities = {};
+        const protocolVersion = "2026-01-26";
+        await rpcRequest("ui/initialize", { appInfo, appCapabilities, protocolVersion });
+        rpcNotify("ui/notifications/initialized", {});
+      };
+
+      const initializeLocalDebug = async () => {
+        console.log("pricing-widget: arrancando en modo debug local", { payloadUrl: DEBUG_PAYLOAD_URL });
+        try {
+          const response = await fetch(DEBUG_PAYLOAD_URL, { cache: "no-store" });
+          if (!response.ok) throw new Error(`No se pudo cargar ${DEBUG_PAYLOAD_URL}: ${response.status}`);
+          const payload = await response.json();
+          console.log("pricing-widget: payload local cargado", payload);
+          renderFromToolResult(payload);
+        } catch (error) {
+          console.error("pricing-widget: error cargando payload local", error);
+          renderSummary({});
+          renderStatus({ ok: false, message: `No se pudo cargar el payload local: ${error.message}`, error: "LOCAL_DEBUG_LOAD_FAILED" });
+          renderQuotes({});
+        }
+      };
+
+      window.addEventListener("message", (event) => {
+        const message = event.data;
+        if (!message || message.jsonrpc !== "2.0") return;
+        
+        if (typeof message.id === "number") {
+          const pending = pendingRequests.get(message.id);
+          if (!pending) return;
+          pendingRequests.delete(message.id);
+          if (message.error) {
+            pending.reject(message.error);
+            return;
+          }
+          pending.resolve(message.result);
+          return;
+        }
+
+        if (typeof message.method !== "string") return;
+        if (message.method === "ui/notifications/tool-result") {
+          console.log("pricing-widget: ui/notifications/tool-result", message.params);
+          renderFromToolResult(message.params);
+        }
+      }, { passive: true });
+
+      renderSummary({ ok: true, input: {}, summary: { total_resultados: 0, mensaje: DEBUG_LOCAL ? "Modo debug local activo." : "Esperando una cotización..." } });
+      renderStatus({ ok: true });
+      renderQuotes({ ok: true, quotes: [] });
+
+      if (DEBUG_LOCAL) {
+        initializeLocalDebug();
+      } else {
+        const loadDebugSample = async () => {
+          try {
+            const response = await fetch(DEBUG_SAMPLE_URL, { cache: "no-store" });
+            const payload = await response.json();
+            console.log("pricing-widget debug sample:", payload);
+            renderFromToolResult(payload);
+          } catch (error) {
+            console.error("No se pudo cargar el sample local:", error);
+            renderSummary({});
+            renderStatus({
+              ok: false,
+              error: "DEBUG_SAMPLE_LOAD_FAILED",
+              message: "No se pudo cargar pricing-widget.sample.json",
+            });
+            renderQuotes({});
+          }
+        };
+
+        if (DEBUG_MODE) {
+          loadDebugSample();
+        } else {
+          initializeBridge().catch((error) => {
+            console.error("No se pudo inicializar el bridge MCP Apps:", error);
+            statusContainerEl.innerHTML = `
+              <div class="error-state">
+                <h3>Error al cargar la interfaz</h3>
+                <p>No se pudo inicializar la comunicación con ChatGPT.</p>
+              </div>
+            `;
+          });
+
+          renderSummary({
+            ok: true,
+            input: {},
+            summary: { total_resultados: 0, mensaje: "Esperando una cotización..." },
+          });
+          renderStatus({ ok: true });
+          renderQuotes({ ok: true, quotes: [] });
+        }
+      }
+
+      const slider = cardsEl;
+      let isDragging = false;
+      let startX = 0;
+      let startScrollLeft = 0;
+
+      slider.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        startX = e.pageX - slider.offsetLeft;
+        startScrollLeft = slider.scrollLeft;
+        slider.classList.add("dragging");
+      });
+
+      window.addEventListener("mouseup", () => {
+        isDragging = false;
+        slider.classList.remove("dragging");
+      });
+
+      slider.addEventListener("mousemove", (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.pageX - slider.offsetLeft;
+        slider.scrollLeft = startScrollLeft - (x - startX) * 1.2;
+      });
+
+      slider.addEventListener("mouseleave", () => {
+        isDragging = false;
+        slider.classList.remove("dragging");
+      });
+    </script>
+  </body>
+</html>
