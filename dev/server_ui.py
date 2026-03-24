@@ -190,6 +190,8 @@ def pricing_api(
                 "ok": False,
                 "error": "LIMIT_TRIES_REACHED",
                 "message": "El usuario ha alcanzado el máximo de 10 consultas en 24 horas.",
+                "ui": {"resourceUri": WIDGET_URI},
+                "openai/outputTemplate": WIDGET_URI,
                 "summary": {
                     "total_resultados": 0,
                     "mensaje": "Límite de consultas alcanzado.",
@@ -215,6 +217,8 @@ def pricing_api(
                 "error": "MIN_AGE_NOT_REACHED",
                 "message": f"""El usuario es menor de 50 años. Si el usuario es menor de esa edad deberá 
                     de ponerse en contacto con un operador tlf: 900 900 516.""",
+                "ui": {"resourceUri": WIDGET_URI},
+                "openai/outputTemplate": WIDGET_URI,
                 "summary": {
                     "total_resultados": 0,
                     "mensaje": "Edad mínima no alanzada.",
@@ -273,7 +277,11 @@ def pricing_api(
 
         return ToolResult(
             content=text,
-            structured_content=normalized,
+            structured_content={
+                **normalized,
+                "ui": {"resourceUri": WIDGET_URI},
+                "openai/outputTemplate": WIDGET_URI,
+            },
             meta={
                 **base_meta,
                 "quoteReady": True,
@@ -301,6 +309,8 @@ def pricing_api(
             **normalized,
             "ok": False,
             "error": error_code,
+            "ui": {"resourceUri": WIDGET_URI},
+            "openai/outputTemplate": WIDGET_URI,
         },
         meta={
             **base_meta,
