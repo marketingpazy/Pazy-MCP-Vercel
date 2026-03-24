@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import json
 from pathlib import Path
-from typing_extensions import Any, Dict
+from typing import Any, Dict
 
 
 from fastmcp import FastMCP, Context
