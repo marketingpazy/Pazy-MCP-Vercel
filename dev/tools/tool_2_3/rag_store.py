@@ -11,7 +11,7 @@ from typing import Any
 
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
+from langchain_community.embeddings import FastEmbedEmbeddings
 from langchain_community.vectorstores import FAISS
 
 from dev.aux_functions import cfg
@@ -33,7 +33,7 @@ class RagSettings:
     faiss_meta_path: str = cfg("FAISS_META_PATH")
     embedding_model: str = cfg(
         "EMBEDDING_MODEL",
-        "text-embedding-3-small",
+        "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
     )
 
     chunk_size: int = 900
@@ -247,7 +247,10 @@ def build_or_load_vectorstore(s: RagSettings) -> FAISS:
     if _cached_vectorstore is not None and _cached_fingerprint == fp:
         return _cached_vectorstore
 
-    embeddings = OpenAIEmbeddings(model=s.embedding_model)
+    embeddings = FastEmbedEmbeddings(
+        model_name=s.embedding_model,
+        cache_dir="/tmp/fastembed_cache",
+    )
 
     # Try loading from writable dir (/tmp on Vercel)
     writable_meta = os.path.join(FAISS_WRITABLE_DIR, "faq_hash.json")

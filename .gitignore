@@ -15,5 +15,6 @@ __pycache__/
 !vercel.json
 *.txt
 !api/requirements.txt
+!requirements.txt
 .vercel
 .env*.local
