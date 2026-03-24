@@ -46,7 +46,7 @@ WIDGET_URI = cfg("WIDGET_URI", "ui://widget/pricing-widget-v1.html")
 WIDGET_HTML_PATH = Path(
     cfg("WIDGET_HTML_PATH", str(BASE_DIR.parent / "public" / "pricing-widget.html"))
 )
-WIDGET_DOMAIN = "https://mcp.pazy.es"
+WIDGET_DOMAIN = "https://mcp-pazy.vercel.app"
 
 WIDGET_CONNECT_DOMAINS = [
     # Añadir APIs externas solo si el widget hace fetch directamente.
