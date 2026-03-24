@@ -10,5 +10,9 @@ __pycache__/
 *.png
 .venv
 *.xlsx
+# JSON files except vercel config
 *.json
+!vercel.json
 *.txt
+.vercel
+.env*.local

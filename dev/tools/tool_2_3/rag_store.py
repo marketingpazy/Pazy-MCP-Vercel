@@ -11,10 +11,18 @@ from typing import Any
 
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 
 from dev.aux_functions import cfg
+
+
+# Writable directory for serverless environments (Vercel uses /tmp)
+FAISS_WRITABLE_DIR = os.environ.get("FAISS_WRITABLE_DIR", "/tmp/pazy_faiss")
+
+# Module-level cache to avoid rebuilding on every request
+_cached_vectorstore: FAISS | None = None
+_cached_fingerprint: dict | None = None
 
 
 @dataclass
@@ -25,7 +33,7 @@ class RagSettings:
     faiss_meta_path: str = cfg("FAISS_META_PATH")
     embedding_model: str = cfg(
         "EMBEDDING_MODEL",
-        "sentence-transformers/all-MiniLM-L6-v2",
+        "text-embedding-3-small",
     )
 
     chunk_size: int = 900
@@ -54,37 +62,50 @@ def _file_sha256(path: str) -> str:
 
 
 def _fingerprint(s: RagSettings) -> dict:
-    return {
+    fp = {
         "faqs_path": os.path.abspath(s.faqs_path),
         "faqs_sha256": _file_sha256(s.faqs_path),
-        "marca_path": os.path.abspath(s.marca_path),
-        "marca_sha256": _file_sha256(s.marca_path),
         "chunk_size": s.chunk_size,
         "chunk_overlap": s.chunk_overlap,
         "embedding_model": s.embedding_model,
-        "pipeline_version": 2,
+        "pipeline_version": 3,
     }
+    # marca_path is optional — only include if the file exists
+    if s.marca_path and os.path.isfile(s.marca_path):
+        fp["marca_path"] = os.path.abspath(s.marca_path)
+        fp["marca_sha256"] = _file_sha256(s.marca_path)
+    return fp
 
 
-def _meta_matches(s: RagSettings, fp: dict) -> bool:
-    if not os.path.isfile(s.faiss_meta_path):
+def _meta_matches_at(meta_path: str, fp: dict) -> bool:
+    if not os.path.isfile(meta_path):
         return False
     try:
-        with open(s.faiss_meta_path, "r", encoding="utf-8") as f:
+        with open(meta_path, "r", encoding="utf-8") as f:
             saved = json.load(f)
         return saved.get("fingerprint") == fp
     except Exception:
         return False
 
 
-def _save_meta(s: RagSettings, fp: dict) -> None:
-    os.makedirs(s.faiss_dir, exist_ok=True)
+def _meta_matches(s: RagSettings, fp: dict) -> bool:
+    return _meta_matches_at(s.faiss_meta_path, fp)
+
+
+def _save_meta_at(meta_path: str, fp: dict) -> None:
+    os.makedirs(os.path.dirname(meta_path), exist_ok=True)
     meta = {"fingerprint": fp, "built_at": datetime.utcnow().isoformat() + "Z"}
-    with open(s.faiss_meta_path, "w", encoding="utf-8") as f:
+    with open(meta_path, "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=2)
 
 
+def _save_meta(s: RagSettings, fp: dict) -> None:
+    _save_meta_at(s.faiss_meta_path, fp)
+
+
 def load_marca_yaml_text(s: RagSettings) -> str:
+    if not s.marca_path or not os.path.isfile(s.marca_path):
+        return ""
     with open(s.marca_path, "r", encoding="utf-8") as f:
         obj = yaml.safe_load(f) or {}
     return yaml.safe_dump(obj, allow_unicode=True, sort_keys=False)
@@ -218,18 +239,46 @@ def _build_documents_from_yaml_root(root: dict, prefix: str, doc_type: str) -> l
 
 
 def build_or_load_vectorstore(s: RagSettings) -> FAISS:
-    embeddings = HuggingFaceEmbeddings(model_name=s.embedding_model)
+    global _cached_vectorstore, _cached_fingerprint
+
     fp = _fingerprint(s)
 
+    # Return cached if fingerprint matches
+    if _cached_vectorstore is not None and _cached_fingerprint == fp:
+        return _cached_vectorstore
+
+    embeddings = OpenAIEmbeddings(model=s.embedding_model)
+
+    # Try loading from writable dir (/tmp on Vercel)
+    writable_meta = os.path.join(FAISS_WRITABLE_DIR, "faq_hash.json")
+    if os.path.isdir(FAISS_WRITABLE_DIR) and _meta_matches_at(writable_meta, fp):
+        try:
+            vs = FAISS.load_local(
+                FAISS_WRITABLE_DIR,
+                embeddings,
+                allow_dangerous_deserialization=True,
+            )
+            _cached_vectorstore = vs
+            _cached_fingerprint = fp
+            return vs
+        except Exception:
+            pass
+
+    # Try loading from original dir (local dev)
     if os.path.isdir(s.faiss_dir) and _meta_matches(s, fp):
-        return FAISS.load_local(
-            s.faiss_dir,
-            embeddings,
-            allow_dangerous_deserialization=True,
-        )
+        try:
+            vs = FAISS.load_local(
+                s.faiss_dir,
+                embeddings,
+                allow_dangerous_deserialization=True,
+            )
+            _cached_vectorstore = vs
+            _cached_fingerprint = fp
+            return vs
+        except Exception:
+            pass
 
-    os.makedirs(os.path.dirname(s.faiss_meta_path), exist_ok=True)
-
+    # Rebuild index from source YAML files
     docs: list[Document] = []
 
     # ---------- FAQ ----------
@@ -241,14 +290,15 @@ def build_or_load_vectorstore(s: RagSettings) -> FAISS:
 
     docs.extend(_build_documents_from_yaml_root(faq_yaml, prefix="faq", doc_type="faq"))
 
-    # ---------- MANUAL DE MARCA ----------
-    with open(s.marca_path, "r", encoding="utf-8") as f:
-        marca_yaml = yaml.safe_load(f) or {}
+    # ---------- MANUAL DE MARCA (optional) ----------
+    if s.marca_path and os.path.isfile(s.marca_path):
+        with open(s.marca_path, "r", encoding="utf-8") as f:
+            marca_yaml = yaml.safe_load(f) or {}
 
-    if "marca_pazy" in marca_yaml and isinstance(marca_yaml["marca_pazy"], dict):
-        marca_yaml = marca_yaml["marca_pazy"]
+        if "marca_pazy" in marca_yaml and isinstance(marca_yaml["marca_pazy"], dict):
+            marca_yaml = marca_yaml["marca_pazy"]
 
-    docs.extend(_build_documents_from_yaml_root(marca_yaml, prefix="brand", doc_type="brand"))
+        docs.extend(_build_documents_from_yaml_root(marca_yaml, prefix="brand", doc_type="brand"))
 
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=s.chunk_size,
@@ -259,8 +309,25 @@ def build_or_load_vectorstore(s: RagSettings) -> FAISS:
     print(f"Rebuilding FAISS index (data changed). Docs: {len(docs)} | Chunks: {len(chunks)}")
 
     vs = FAISS.from_documents(chunks, embeddings)
-    vs.save_local(s.faiss_dir)
-    _save_meta(s, fp)
+
+    # Save to writable dir (works on Vercel /tmp)
+    try:
+        os.makedirs(FAISS_WRITABLE_DIR, exist_ok=True)
+        vs.save_local(FAISS_WRITABLE_DIR)
+        _save_meta_at(writable_meta, fp)
+    except Exception as e:
+        print(f"Could not save FAISS to writable dir: {e}")
+
+    # Also try original dir (for local dev)
+    try:
+        os.makedirs(s.faiss_dir, exist_ok=True)
+        vs.save_local(s.faiss_dir)
+        _save_meta(s, fp)
+    except Exception:
+        pass
+
+    _cached_vectorstore = vs
+    _cached_fingerprint = fp
     return vs
 
 

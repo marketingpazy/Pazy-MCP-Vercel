@@ -1,0 +1,12 @@
+pyproject.toml
+pdm.lock
+Dockerfile
+.dockerignore
+tests/
+__pypackages__/
+.venv/
+.env
+*.pdf
+*.excalidraw
+*.png
+*.xlsx
