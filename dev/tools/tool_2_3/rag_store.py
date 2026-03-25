@@ -11,34 +11,41 @@ from typing import Any
 
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-import google.generativeai as genai
+import requests
 from langchain_core.embeddings import Embeddings
+
+_GEMINI_EMBED_URL = (
+    "https://generativelanguage.googleapis.com/v1/{model}:embedContent"
+)
 
 
 class GeminiEmbeddings(Embeddings):
-    """Thin wrapper sobre google-generativeai usando el endpoint v1 estable."""
+    """Llama directamente al REST API v1 de Google — sin SDKs, sin gRPC."""
 
     def __init__(self, model: str = "models/text-embedding-004"):
         self.model = model
-        api_key = os.environ.get("GOOGLE_API_KEY")
-        if api_key:
-            genai.configure(api_key=api_key)
+        self.api_key = os.environ.get("GOOGLE_API_KEY", "")
+
+    def _embed_one(self, text: str, task_type: str = "RETRIEVAL_DOCUMENT") -> list:
+        url = _GEMINI_EMBED_URL.format(model=self.model)
+        resp = requests.post(
+            url,
+            params={"key": self.api_key},
+            json={
+                "model": self.model,
+                "content": {"parts": [{"text": text}]},
+                "taskType": task_type,
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+        return resp.json()["embedding"]["values"]
 
     def embed_documents(self, texts: list) -> list:
-        result = genai.embed_content(
-            model=self.model,
-            content=texts,
-            task_type="retrieval_document",
-        )
-        return result["embedding"]
+        return [self._embed_one(t, "RETRIEVAL_DOCUMENT") for t in texts]
 
     def embed_query(self, text: str) -> list:
-        result = genai.embed_content(
-            model=self.model,
-            content=text,
-            task_type="retrieval_query",
-        )
-        return result["embedding"]
+        return self._embed_one(text, "RETRIEVAL_QUERY")
 from langchain_community.vectorstores import FAISS
 
 from dev.aux_functions import cfg
