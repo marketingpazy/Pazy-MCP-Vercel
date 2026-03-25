@@ -9,12 +9,18 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+import pathlib
+
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import FastEmbedEmbeddings
 from langchain_community.vectorstores import FAISS
 
 from dev.aux_functions import cfg
+
+# Directorio con el modelo ONNX ya bundleado en el repo
+_PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[3]
+BUNDLED_MODELS_DIR = str(_PROJECT_ROOT / "bundled_models")
 
 
 # Writable directory for serverless environments (Vercel uses /tmp)
@@ -247,9 +253,11 @@ def build_or_load_vectorstore(s: RagSettings) -> FAISS:
     if _cached_vectorstore is not None and _cached_fingerprint == fp:
         return _cached_vectorstore
 
+    # Usa el modelo bundleado en el repo si existe, si no descarga a /tmp
+    _cache = BUNDLED_MODELS_DIR if os.path.isdir(BUNDLED_MODELS_DIR) else "/tmp/fastembed_cache"
     embeddings = FastEmbedEmbeddings(
         model_name=s.embedding_model,
-        cache_dir="/tmp/fastembed_cache",
+        cache_dir=_cache,
     )
 
     # Try loading from writable dir (/tmp on Vercel)

@@ -18,3 +18,5 @@ __pycache__/
 !requirements.txt
 .vercel
 .env*.local
+# Bundled embedding model — excepciones al final para que sobreescriban *.json y *.txt
+!bundled_models/**
