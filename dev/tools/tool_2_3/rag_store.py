@@ -20,6 +20,9 @@ class GeminiEmbeddings(Embeddings):
 
     def __init__(self, model: str = "models/text-embedding-004"):
         self.model = model
+        api_key = os.environ.get("GOOGLE_API_KEY")
+        if api_key:
+            genai.configure(api_key=api_key)
 
     def embed_documents(self, texts: list) -> list:
         result = genai.embed_content(
