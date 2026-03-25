@@ -11,7 +11,7 @@ from typing import Any
 
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import FastEmbedEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import FAISS
 
 from dev.aux_functions import cfg
@@ -247,10 +247,7 @@ def build_or_load_vectorstore(s: RagSettings) -> FAISS:
     if _cached_vectorstore is not None and _cached_fingerprint == fp:
         return _cached_vectorstore
 
-    embeddings = FastEmbedEmbeddings(
-        model_name=s.embedding_model,
-        cache_dir="/tmp/fastembed_cache",
-    )
+    embeddings = GoogleGenerativeAIEmbeddings(model=s.embedding_model)
 
     # Try loading from writable dir (/tmp on Vercel)
     writable_meta = os.path.join(FAISS_WRITABLE_DIR, "faq_hash.json")
