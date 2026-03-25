@@ -677,7 +677,7 @@
 
         const preferred =
           cuotas.find((item) => Number(item?.plazo_anos) === 10) ||
-          cuotas[0];
+          cuotas[cuotas.length - 1];
 
         const years = Number(preferred?.plazo_anos);
         const label =
