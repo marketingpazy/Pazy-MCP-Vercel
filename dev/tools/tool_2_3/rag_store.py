@@ -11,7 +11,31 @@ from typing import Any
 
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+import google.generativeai as genai
+from langchain_core.embeddings import Embeddings
+
+
+class GeminiEmbeddings(Embeddings):
+    """Thin wrapper sobre google-generativeai usando el endpoint v1 estable."""
+
+    def __init__(self, model: str = "models/text-embedding-004"):
+        self.model = model
+
+    def embed_documents(self, texts: list) -> list:
+        result = genai.embed_content(
+            model=self.model,
+            content=texts,
+            task_type="retrieval_document",
+        )
+        return result["embedding"]
+
+    def embed_query(self, text: str) -> list:
+        result = genai.embed_content(
+            model=self.model,
+            content=text,
+            task_type="retrieval_query",
+        )
+        return result["embedding"]
 from langchain_community.vectorstores import FAISS
 
 from dev.aux_functions import cfg
@@ -247,10 +271,7 @@ def build_or_load_vectorstore(s: RagSettings) -> FAISS:
     if _cached_vectorstore is not None and _cached_fingerprint == fp:
         return _cached_vectorstore
 
-    embeddings = GoogleGenerativeAIEmbeddings(
-        model=s.embedding_model,
-        http_options={"api_version": "v1"},
-    )
+    embeddings = GeminiEmbeddings(model=s.embedding_model)
 
     # Try loading from writable dir (/tmp on Vercel)
     writable_meta = os.path.join(FAISS_WRITABLE_DIR, "faq_hash.json")
