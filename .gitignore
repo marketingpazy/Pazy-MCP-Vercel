@@ -18,3 +18,5 @@ __pycache__/
 !requirements.txt
 .vercel
 .env*.local
+!bundled_models/**
+
