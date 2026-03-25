@@ -251,9 +251,10 @@ def build_or_load_vectorstore(s: RagSettings) -> FAISS:
     if _cached_vectorstore is not None and _cached_fingerprint == fp:
         return _cached_vectorstore
 
+    _cache = BUNDLED_MODELS_DIR if os.path.isdir(BUNDLED_MODELS_DIR) else "/tmp/fastembed_cache"
     embeddings = FastEmbedEmbeddings(
         model_name=s.embedding_model,
-        cache_dir="/tmp/fastembed_cache",
+        cache_dir=_cache,
     )
 
     # Try loading from writable dir (/tmp on Vercel)
