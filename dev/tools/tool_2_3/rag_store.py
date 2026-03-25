@@ -11,41 +11,7 @@ from typing import Any
 
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-import requests
-from langchain_core.embeddings import Embeddings
-
-_GEMINI_EMBED_URL = (
-    "https://generativelanguage.googleapis.com/v1/{model}:embedContent"
-)
-
-
-class GeminiEmbeddings(Embeddings):
-    """Llama directamente al REST API v1 de Google — sin SDKs, sin gRPC."""
-
-    def __init__(self, model: str = "models/text-embedding-004"):
-        self.model = model
-        self.api_key = os.environ.get("GOOGLE_API_KEY", "")
-
-    def _embed_one(self, text: str, task_type: str = "RETRIEVAL_DOCUMENT") -> list:
-        url = _GEMINI_EMBED_URL.format(model=self.model)
-        resp = requests.post(
-            url,
-            params={"key": self.api_key},
-            json={
-                "model": self.model,
-                "content": {"parts": [{"text": text}]},
-                "taskType": task_type,
-            },
-            timeout=30,
-        )
-        resp.raise_for_status()
-        return resp.json()["embedding"]["values"]
-
-    def embed_documents(self, texts: list) -> list:
-        return [self._embed_one(t, "RETRIEVAL_DOCUMENT") for t in texts]
-
-    def embed_query(self, text: str) -> list:
-        return self._embed_one(text, "RETRIEVAL_QUERY")
+from langchain_community.embeddings import FastEmbedEmbeddings
 from langchain_community.vectorstores import FAISS
 
 from dev.aux_functions import cfg
@@ -281,7 +247,10 @@ def build_or_load_vectorstore(s: RagSettings) -> FAISS:
     if _cached_vectorstore is not None and _cached_fingerprint == fp:
         return _cached_vectorstore
 
-    embeddings = GeminiEmbeddings(model=s.embedding_model)
+    embeddings = FastEmbedEmbeddings(
+        model_name=s.embedding_model,
+        cache_dir="/tmp/fastembed_cache",
+    )
 
     # Try loading from writable dir (/tmp on Vercel)
     writable_meta = os.path.join(FAISS_WRITABLE_DIR, "faq_hash.json")
