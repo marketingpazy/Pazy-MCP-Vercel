@@ -5,6 +5,10 @@ import os
 import json
 import yaml
 import hashlib
+import pathlib
+_PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[3]
+BUNDLED_MODELS_DIR = str(_PROJECT_ROOT / "bundled_models")
+
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
