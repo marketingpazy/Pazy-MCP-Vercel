@@ -247,7 +247,10 @@ def build_or_load_vectorstore(s: RagSettings) -> FAISS:
     if _cached_vectorstore is not None and _cached_fingerprint == fp:
         return _cached_vectorstore
 
-    embeddings = GoogleGenerativeAIEmbeddings(model=s.embedding_model)
+    embeddings = GoogleGenerativeAIEmbeddings(
+        model=s.embedding_model,
+        http_options={"api_version": "v1"},
+    )
 
     # Try loading from writable dir (/tmp on Vercel)
     writable_meta = os.path.join(FAISS_WRITABLE_DIR, "faq_hash.json")
