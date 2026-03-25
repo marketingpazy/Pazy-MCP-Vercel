@@ -1,0 +1,375 @@
+faq_pazy:
+
+  empresa_y_confianza:
+    garantias:
+      resumen: >
+        Pazy ofrece contratos legales donde se detallan todas las condiciones del servicio.
+        Los clientes pueden consultar información en la web oficial y en reseñas públicas.
+      referencias:
+        - medio: "El Economista"
+          nota: "Menciona a Pazy como alternativa dentro del sector funerario."
+
+    pertenencia_grupo:
+      respuesta: >
+        Pazy indica que forma parte del grupo Atresmedia. Para mayor tranquilidad,
+        puedes verificarlo en el aviso legal o la sección corporativa de la web oficial.
+        Si necesitas, puedo orientarte sobre dónde encontrar esa información.
+      notas_de_seguridad: >
+        No afirmes detalles corporativos adicionales (fechas, sociedades, porcentajes)
+        si no están confirmados por una fuente oficial o por información proporcionada
+        por la empresa.
+
+    estafa:
+      respuesta: >
+        Pazy es una empresa con actividad real y contratos legales con sus clientes.
+        Toda la información sobre servicios, condiciones y opiniones de clientes puede
+        consultarse en la web oficial de la empresa.
+
+    contacto_pazy:
+      aliases:
+        - quiero hablar con un operador
+        - quiero hablar con un asesor
+        - quiero atención humana
+        - quiero que me atienda una persona
+        - quiero llamar por teléfono
+        - pásame con un operador
+        - pásame con un asesor
+        - dame el teléfono de contacto
+        - contacto de Pazy
+        - hablar con alguien
+      respuesta: >
+        Puedes contactar con un operador o asesor de Pazy en el teléfono general 900 900 516.
+
+  cobertura_geografica:
+    nacional:
+      respuesta: >
+        Pazy ofrece servicios en toda España, tanto en la península como en las islas.
+        Aunque la empresa tiene oficinas físicas en Madrid, la gestión del servicio se
+        realiza de forma digital y telefónica, con atención 24 horas todos los días.
+
+    oficinas:
+      respuesta: >
+        Pazy dispone de oficinas en Madrid. La mayor parte de la gestión se realiza
+        de forma digital o telefónica para facilitar la atención a nivel nacional.
+  
+  cobertura_horaria:
+      aliases: >
+        - horario llamadas 
+        - horario 
+        - cuando puedo llamar 
+        - a que hora puedo llamar 
+      horario_llamadas: >
+        IMPORTANTE, EL HORARIO DE LLAMADAS COMERCIALES ES DE LUNES A JUEVES DE 
+        9:00 A 18:00 Y VIERNES DE 9:00 A 14:00. 
+
+  modelo_servicio:
+    es_seguro:
+      respuesta: >
+        Pazy no es un seguro de decesos. El servicio consiste en planificar y dejar
+        pagado el servicio funerario en vida mediante un contrato con precio cerrado.
+        Una vez completado el pago, no existen cuotas posteriores ni incrementos
+        anuales.
+
+    funcionamiento_pago:
+      respuesta: >
+        El cliente puede pagar el servicio en cuotas según la periodicidad elegida.
+        Cada contrato es individual y permite personalizar el servicio.
+
+    fallecimiento_antes_de_pagar:
+      respuesta: >
+        Si la persona fallece antes de completar el pago del servicio, se deberá
+        abonar la cantidad restante. Este importe puede pagarse de forma íntegra
+        o financiarse en plazos de hasta 12 meses.
+
+  edad_contratacion:
+    menores_de_50:
+      politica: >
+        Pazy normalmente ofrece sus servicios a personas mayores de 50 años.
+        En algunos casos, el servicio puede transferirse a familiares si la persona
+        titular del contrato lo ha contratado previamente.
+
+  servicios_incluidos:
+    tramites_post_mortem:
+      - certificado_de_ultimas_voluntades
+      - certificado_de_seguros_con_cobertura_de_fallecimiento
+      - certificados_de_matrimonio_o_nacimiento
+      - gestion_de_pensiones_de_viudedad_u_orfandad
+      - tramites_relacionados_con_seguridad_social
+      - cambio_de_titularidad_de_suministros
+      - asesoramiento_juridico
+
+    servicios_en_vida:
+      - asesoramiento_juridico_telefonico
+      - descuento_en_declaracion_de_la_renta
+      - redaccion_de_testamento_online
+      - asesoramiento_sobre_cambio_de_titularidad_de_suministros
+
+  limitaciones_del_servicio:
+    apertura_y_cierre_de_nicho:
+      descripcion: >
+        La apertura y cierre de nicho es una tasa municipal que depende de la
+        ordenanza del cementerio correspondiente. Este coste no está incluido
+        en el presupuesto del servicio funerario.
+
+    nicho_para_inhumacion:
+      descripcion: >
+        En caso de optar por inhumación y no disponer de nicho, el cliente debe
+        gestionarlo directamente con el cementerio o ayuntamiento correspondiente.
+
+    ejecucion_del_servicio:
+      descripcion: >
+        El servicio contratado se ejecuta en la provincia o ubicación especificada
+        en el contrato. Cambios posteriores pueden implicar costes adicionales.
+
+    traslados:
+      descripcion: >
+        El presupuesto no incluye traslados desde otras provincias o países.
+        Si el fallecimiento ocurre fuera de la ubicación contratada, puede ser
+        necesario abonar un coste adicional por traslado.
+
+    incineracion:
+      descripcion: >
+        La incineración se realiza en una instalación asociada cercana a la
+        localidad del cliente, que no necesariamente coincide con el tanatorio
+        donde se realiza la velación.
+
+  manejo_de_peticiones:
+    peticiones_ilegales:
+      politica: >
+        Si un usuario solicita algo ilegal o contrario a la normativa, se debe
+        informar de que no es posible realizarlo y recomendar seguir los
+        procedimientos legales correspondientes.
+
+    peticiones_especiales:
+      politica: >
+        Para solicitudes muy específicas o poco habituales, se recomienda
+        derivar la consulta a un agente especializado para revisarlo caso por caso.
+
+  presupuesto_y_contrato:
+    contratar_ahora_o_planificar:
+      pregunta: >
+        ¿Esto es para contratar ahora o para planificar a futuro? ¿Puedo contratar un
+        servicio urgente? ¿Puedo contratar para alguien que no va a fallecer?
+      respuesta: >
+        Si tu interés es planificar a futuro, ofrecemos planes funerarios para dejar todo
+        atado y prepagado con antelación, con un presupuesto cerrado, sin subidas futuras
+        ni gastos adicionales, y sin costes ocultos. Puedes elegir el método y temporalidad
+        de pago, desde pago único a la posibilidad de fraccionarlo en cuotas fijas a un
+        máximo de 10 años.
+        Si lo que deseas es gestionar un servicio funerario urgente, ofrecemos servicio en
+        toda España. Este servicio se puede financiar a un máximo de 12 meses.
+
+    modificar_presupuesto_o_contrato:
+      pregunta: >
+        ¿Puedo modificar mi presupuesto? ¿Puedo cambiar el presupuesto? ¿Si contrato
+        puedo modificar el contrato?
+      respuesta: >
+        Sí, puedes cambiar los detalles, tanto del presupuesto dado, como del contrato
+        en cualquier momento. En caso de añadir algún extra adicional, alguna modificación
+        de ubicación o traslado adicional, se tendrá que calcular el coste y puede ser que
+        modifique el total.
+
+    envio_presupuesto:
+      pregunta: >
+        ¿Cuándo recibo el presupuesto? ¿Cómo mandáis el presupuesto? ¿Enviáis el
+        presupuesto? Quiero el presupuesto en papel.
+      respuesta: >
+        El presupuesto se facilita por WhatsApp o email en minutos, incluso de manera
+        inmediata, desde el momento en que tengamos toda la información necesaria.
+
+    envio_contrato:
+      pregunta: >
+        ¿Cuándo recibo el contrato? ¿Cómo mandáis el contrato? ¿Enviáis el contrato?
+        ¿Tenéis algún contrato? Quiero el contrato en papel.
+      respuesta: >
+        El contrato se proporciona de manera inmediata por WhatsApp o email,
+        preferiblemente. También tenemos la opción de enviarlo por correo postal a
+        domicilio, aunque tarda algunos días más. Lo más recomendable es recibir el
+        contrato por WhatsApp o email e imprimirlo, ya que la documentación es la misma
+        que enviaríamos por correo postal, ya que es un contrato legal y vinculante con
+        cada cliente, donde se especifican claramente todos los servicios, precios y
+        condiciones, ofreciendo seguridad jurídica total.
+
+    necesidad_de_datos_personales:
+      pregunta: >
+        ¿Por qué necesitáis mis datos? ¿Por qué queréis mis datos personales?
+      respuesta: >
+        Necesitamos tus datos personales para poder generar un presupuesto personalizado
+        y cerrado, ajustado a tus necesidades, asegurando que todo se realice de manera
+        correcta, legal y segura. Ten en cuenta que nuestros presupuestos son totalmente
+        personalizados, y para ello debemos tener algún dato para podértelo facilitar.
+
+    cambio_de_banco_o_forma_de_pago:
+      pregunta: >
+        ¿Qué pasa si cambio de banco o forma de pago? ¿Cómo os aviso si cambio de
+        número de cuenta? ¿Cómo os aviso si cambio la forma de pago?
+      respuesta: >
+        Simplemente tienes que ponerte en contacto con nosotros a través del teléfono
+        gratuito que te facilitamos en el momento de contratación. En esa llamada,
+        nuestro equipo tomará los datos actualizados y los cambiará en tu ficha de cliente
+        para tenerlos siempre actualizados. Puedes pedir de nuevo el contrato con los
+        datos actualizados, al igual que recibiste el primer contrato. Siempre tendrá que
+        ser el contratante del servicio quien realice el cambio o una persona autorizada.
+
+    cambio_de_beneficiario:
+      pregunta: >
+        ¿Cómo cambio de beneficiario? Si cambio de beneficiario, ¿cómo os lo
+        comunico? ¿Cómo os aviso si cambia el destinatario del servicio? Si traspaso mi
+        plan a un familiar, ¿cómo os lo comunico?
+      respuesta: >
+        Simplemente tienes que ponerte en contacto con nosotros a través del teléfono
+        gratuito que te facilitamos en el momento de contratación. Siempre tendrá que ser
+        el contratante del servicio quien realice el cambio. En ese momento, deberá
+        facilitarnos los datos de la persona destinataria del servicio. Si es una persona
+        que ya ha fallecido activaremos nuestro protocolo de servicio. En el caso de que no
+        haya fallecido aún, nuestro equipo de riesgos deberá autorizar el cambio para velar
+        que se cumple con toda nuestra política interna.
+
+    desistimiento_y_cancelacion:
+      pregunta: >
+        ¿Existe periodo de desistimiento? ¿Puedo cancelar mi contrato? ¿Cuándo puedo
+        cancelar mi contrato? ¿Puedo darme de baja en cualquier momento?
+      respuesta: >
+        Pazy no es un seguro de decesos, por lo que puedes cancelar el contrato en
+        cualquier momento. Las condiciones específicas del contrato establecen los términos
+        aplicables en cada caso.
+
+    reembolso_por_cancelacion:
+      pregunta: >
+        ¿Si contrato un plan funerario con Pazy y me quiero dar de baja, devuelven el dinero?
+      respuesta: >
+        Si decides cancelar tu plan funerario, Pazy te reembolsa la totalidad del importe
+        abonado, descontando únicamente 500€ correspondientes a los gastos de gestión.
+
+    telefono_para_dudas:
+      pregunta: >
+        ¿Dónde llamo para dudas? ¿A qué teléfono puedo contactar para dudas?
+      respuesta: >
+        Si no es para un servicio urgente, para cualquier duda, puedes contactar con tu
+        asesor de Pazy en horario comercial (de lunes a jueves de 9:00 a 18:00 y viernes
+        de 9:00 a 18:00) o acceder al apartado de preguntas frecuentes de la web oficial.
+
+    verificar_datos_del_contrato:
+      pregunta: >
+        ¿Cómo verifico que todos los datos del contrato son correctos? ¿Cómo confirmo
+        los datos de mi contrato antes de contratar? ¿Cómo confirmo los datos de mi
+        contrato?
+      respuesta: >
+        Para verificar que todos los datos del contrato son correctos, revisamos contigo
+        cada campo y dato antes de firmarlo, incluyendo nombre, edad, ubicación, plan
+        seleccionado, extras y forma de pago, asegurando que el contrato refleje
+        exactamente lo que has solicitado. Igualmente, si detectas un error en tus datos
+        tras la firma, puedes solicitar la rectificación o corrección en horario comercial.
+
+    entrada_en_vigor_del_contrato:
+      pregunta: >
+        ¿Cuándo entra en vigor el contrato? ¿El contrato tiene validez desde el primer
+        momento? ¿Cuándo me cubre el contrato?
+      respuesta: >
+        El contrato entra en vigor en el momento en que aceptes las condiciones y datos
+        del texto legal leído por el asesor. Desde ese instante el servicio queda
+        formalmente garantizado conforme a lo contratado respetándose siempre el precio
+        por el servicio acordado.
+
+    consulta_del_contrato_anos_despues:
+      pregunta: >
+        ¿Cómo se consulta el contrato años después?
+      respuesta: >
+        Para consultar el contrato años después, la familia o el titular puede solicitar
+        acceso al archivo digital mediante el canal de atención, proporcionando los datos
+        de identificación como el nombre completo del contratante o el DNI/NIE o
+        pasaporte.
+
+    servicio_mas_contratado:
+      pregunta: >
+        ¿Cuál es el servicio más contratado?
+      respuesta: >
+        El servicio más contratado suele ser el Estándar, ya que incluye velación en
+        tanatorio y servicios más tradicionales, ofreciendo un equilibrio entre cobertura y
+        coste.
+
+    presupuesto_para_dos_ubicaciones:
+      pregunta: >
+        ¿Se puede pedir presupuesto para dos ubicaciones? ¿Puedo contratar para dos
+        localidades? No sé dónde viviré, ¿puedo contratar en dos sitios diferentes?
+      respuesta: >
+        No es habitual pedir presupuesto para dos ubicaciones en un mismo contrato; cada
+        ubicación requiere de un presupuesto independiente para reflejar costes y logística,
+        ya que el precio del servicio depende de la provincia, entre otros factores. No
+        obstante, nos adaptamos a la situación de cada persona para poder facilitar un
+        presupuesto personalizado y ajustado a cada caso. Por ello, se recomienda hablar
+        con un agente especializado.
+
+    limite_de_extras:
+      pregunta: >
+        ¿Hay límite de extras? ¿Hay límite de servicios adicionales?
+      respuesta: >
+        No existen límites, nuestros servicios son totalmente personalizados. Lo único que
+        pedimos es cumplir con la legalidad. Por eso es recomendable que, en caso de
+        querer añadir algún servicio especial, lo consultes con un asesor de Pazy.
+
+  informacion_adicional:
+    cobertura_en_toda_espana:
+      pregunta: >
+        ¿Trabajáis en mi provincia? ¿Trabajáis a nivel nacional? ¿En qué provincias
+        trabajáis? ¿Dónde trabajáis?
+      respuesta: >
+        Trabajamos en toda España, tanto península como islas, por lo que podemos
+        atenderte independientemente de tu provincia. Estamos disponibles las 24 horas.
+
+    servicios_no_incluidos:
+      pregunta: >
+        ¿Qué servicios no están incluidos?
+      respuesta: >
+        Los servicios no incluidos en el precio son las tasas municipales como la apertura
+        y cierre de nicho, traslados entre localidades o desde países extranjeros, y
+        cualquier cambio de ubicación del servicio después de haberlo contratado, ya que
+        puede requerir un coste adicional. En el caso de que haya un cambio de localidad,
+        deberás comunicarlo a nuestros asesores para que actualicen tu ficha de cliente.
+
+    limitacion_traslados_fuera_de_espana:
+      descripcion: >
+        El servicio contratado y sobre el que nuestros asesores elaboran un presupuesto
+        no incluye traslados desde localidades o países que no sean España. En caso de
+        que el fallecimiento se produzca en otra localidad o en el extranjero, es posible
+        que se tenga que abonar un importe adicional correspondiente al traslado.
+
+    seguro_de_decesos_existente:
+      pregunta: >
+        ¿Qué pasa si ya tengo un seguro de decesos? ¿Qué pasa con mi seguro de decesos?
+      respuesta: >
+        No te preocupes. Pazy dispone de un equipo con trayectoria consolidada en este
+        tipo de trámites. Si decides cambiar, te ayudaremos en todo el proceso
+        proporcionándote la carta de baja necesaria para que realices el trámite sin ningún
+        inconveniente y puedas formalizar tu contrato en Pazy de manera rápida y segura.
+        Tu seguro no te puede retener a que te quedes con ellos si tú no quieres.
+
+    perder_lo_pagado_del_seguro:
+      pregunta: >
+        ¿Pierdo todo lo que llevo pagado con mi seguro de decesos?
+      respuesta: >
+        Los seguros de decesos no devuelven nada de lo que llevas pagado, pero el haber
+        estado pagando todo este tiempo te ha servido para estar cubierto/a. A partir de
+        cierta edad puede dejar de tener sentido seguir pagando, ya que las cuotas suelen
+        crecer de forma importante con el tiempo.
+
+    cementerio_aparte:
+      pregunta: >
+        ¿El cementerio se paga a parte? ¿El cementerio está incluido?
+      respuesta: >
+        Asesoramos para realizar el trámite en todo lo que sea necesario, ya que el
+        cementerio y la tasa de apertura o cierre de nicho se pagan aparte, según la
+        ordenanza fiscal de cada municipio, y no están incluidos en el presupuesto de
+        Pazy. Nosotros haremos todos los trámites necesarios, ya dispongas de una unidad
+        de enterramiento propia o no, pero el pago de la tasa municipal corresponderá
+        siempre a los familiares.
+
+    garantias_a_largo_plazo:
+      pregunta: >
+        ¿Qué garantías ofrecéis a largo plazo? ¿Qué garantías tenéis?
+      respuesta: >
+        Las garantías a largo plazo se basan en la transparencia de nuestro contrato: una
+        vez contratado y pagado el servicio, no hay costes adicionales ni intereses.
+        Además, contamos con atención continua y soporte nacional, asegurando que el
+        servicio se pueda realizar según lo acordado. También contamos con el respaldo
+        económico y reputacional de una empresa líder en España.

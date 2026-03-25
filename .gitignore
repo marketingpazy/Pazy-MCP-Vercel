@@ -1,0 +1,20 @@
+*.py[codz]
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.pdm-python
+.env
+*.pdf
+*.excalidraw
+*.png
+.venv
+*.xlsx
+# JSON files except vercel config
+*.json
+!vercel.json
+*.txt
+!api/requirements.txt
+!requirements.txt
+.vercel
+.env*.local
