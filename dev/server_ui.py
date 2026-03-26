@@ -68,6 +68,8 @@ WIDGET_HTML_PATH = next(
 
 def _resolve_widget_domain() -> str:
     def _normalize(url: str) -> str:
+        if not url:
+            return None
         url = url.strip()
         if not url:
             return None
