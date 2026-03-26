@@ -240,20 +240,11 @@ def is_business_error(payload: Dict[str, Any]) -> bool:
 
 def is_success_payload(payload: Dict[str, Any]) -> bool:
     structured = payload.get("structured_content")
-    meta = payload.get("meta")
-    content_text = text_from_content(payload.get("content")).lower()
 
-    if isinstance(structured, dict) and structured.get("ok") is True:
-        return True
+    if not isinstance(structured, dict):
+        return False
 
-    if isinstance(meta, dict) and meta.get("quoteReady") is True:
-        return True
-
-    success_markers = [
-        "aquí tienes tu cotización",
-        "he procesado tu solicitud, pero no he encontrado cotizaciones disponibles",
-    ]
-    return any(marker in content_text for marker in success_markers)
+    return structured.get("ok") is True and not structured.get("error")
 
 
 async def run_test(session: ClientSession, case: TestCase) -> bool:
