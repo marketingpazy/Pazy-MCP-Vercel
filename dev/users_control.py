@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass
 
-MAX_PRICING_CALLS = 200
+MAX_PRICING_CALLS = 10
 RESET_WINDOW_HOURS = 24
 
 
