@@ -364,6 +364,18 @@ faq_pazy:
         de enterramiento propia o no, pero el pago de la tasa municipal corresponderá
         siempre a los familiares.
 
+  planes_y_packs:
+    tipos_de_plan:
+      pregunta: >
+        ¿Qué planes o packs tiene Pazy? ¿Qué tipos de servicio ofrecéis?
+        ¿Cuáles son vuestros paquetes? ¿Tenéis plan ECO? ¿Tenéis plan Estándar?
+      respuesta: >
+        Pazy no trabaja con "packs cerrados" al estilo tradicional, sino con planes
+        funerarios personalizados. Esto significa que cada persona puede decidir cómo
+        quiere que sea su despedida y qué servicios incluir. Aun así, para facilitar
+        la elección, existen dos configuraciones muy habituales que sirven como base:
+        ECO y ESTÁNDAR.
+
     garantias_a_largo_plazo:
       pregunta: >
         ¿Qué garantías ofrecéis a largo plazo? ¿Qué garantías tenéis?
