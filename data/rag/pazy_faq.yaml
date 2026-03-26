@@ -365,16 +365,57 @@ faq_pazy:
         siempre a los familiares.
 
   planes_y_packs:
-    tipos_de_plan:
+    descripcion_general_planes:
       pregunta: >
         ¿Qué planes o packs tiene Pazy? ¿Qué tipos de servicio ofrecéis?
-        ¿Cuáles son vuestros paquetes? ¿Tenéis plan ECO? ¿Tenéis plan Estándar?
+        ¿Cuáles son vuestros paquetes? ¿Cuántos planes tenéis?
       respuesta: >
         Pazy no trabaja con "packs cerrados" al estilo tradicional, sino con planes
-        funerarios personalizados. Esto significa que cada persona puede decidir cómo
-        quiere que sea su despedida y qué servicios incluir. Aun así, para facilitar
-        la elección, existen dos configuraciones muy habituales que sirven como base:
-        ECO y ESTÁNDAR.
+        funerarios personalizados. Para facilitar la elección, existen dos
+        configuraciones base: ECO y ESTÁNDAR. Cada una puede personalizarse
+        según las preferencias de cada familia.
+
+    paquete_eco:
+      pregunta: >
+        ¿Qué incluye el plan ECO? ¿En qué consiste el plan ECO? ¿Qué es el plan ECO?
+        Información del plan ECO. Descripción del plan ECO.
+      respuesta: >
+        El Plan ECO está pensado para quienes buscan una despedida sencilla, íntima
+        y económica, con todas las garantías y acompañamiento profesional.
+        No incluye velatorio.
+
+        Servicios incluidos en el Plan ECO:
+        - Recogida y traslado del difunto
+        - Féretro ecológico
+        - Acondicionamiento sanitario y estético
+        - Tramitación administrativa completa
+        - Gestión de Registro Civil y licencias para el destino final
+        - Urna funeraria (si se elige incineración)
+        - Cremación (en caso de incineración)
+        - Traslado al cementerio (en caso de inhumación)
+        - Entrega de cenizas a la familia (si es incineración)
+        - Entrega de certificados literales de defunción
+        - Servicio de psicólogo gratuito durante un año para familiares
+        - Consultoría jurídica y gestoría para trámites posteriores
+
+        Permite añadir ceremonia religiosa o laica si la familia lo desea.
+
+    paquete_estandar:
+      pregunta: >
+        ¿Qué incluye el plan ESTÁNDAR? ¿En qué consiste el plan ESTÁNDAR?
+        ¿Qué es el plan ESTÁNDAR? Información del plan ESTÁNDAR.
+        Descripción del plan ESTÁNDAR. ¿Cuál es la diferencia entre ECO y ESTÁNDAR?
+      respuesta: >
+        El Plan ESTÁNDAR incluye todo lo del Plan ECO más los servicios para
+        quienes desean realizar un velatorio y una despedida más acompañada.
+
+        Servicios adicionales respecto al Plan ECO:
+        - Sala de velatorio en tanatorio
+        - Ceremonia de despedida (religiosa o civil)
+        - Decoración floral en la mayoría de tanatorios
+
+        Es la opción más habitual cuando la familia quiere que amigos y familiares
+        puedan acompañar y despedirse del fallecido en un entorno adecuado.
 
     garantias_a_largo_plazo:
       pregunta: >
