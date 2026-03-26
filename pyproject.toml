@@ -47,6 +47,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.pdm.scripts]
 dev_ui = "python ./dev/server_ui.py"
-test_tool1 = "python ./tests/test_client_tool1.py"
-test_tool2 = "python ./tests/test_client_tool2.py"
+test_1 = "python ./tests/test_client_tool1.py"
+test_2 = "python ./tests/test_client_tool2.py"
 test_ui = "python ./tests/test_client_pricing_debug.py"

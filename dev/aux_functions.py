@@ -5,6 +5,15 @@ import re
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(_THIS_DIR, ".config")
+VALID_TIPO_FUNERAL = {
+    "incineración": "incineracion",
+    "incineracion": "incineracion",
+    "cremación": "incineracion",
+    "cremacion": "incineracion",
+    "inhumación": "inhumacion",
+    "inhumacion": "inhumacion",
+}
+
 
 def cfg(key: str, default=None):
     return CONFIG.get(key, default)
@@ -25,7 +34,27 @@ def load_config_kv(path: str = CONFIG_PATH) -> Dict[str, str]:
 
 CONFIG = load_config_kv(CONFIG_PATH)
 
+def is_valid_postal_code(cp: str) -> bool:
+    """
+    Valida un código postal español:
+    - 5 dígitos
+    - prefijo entre 01 y 52
+    """
+    if not isinstance(cp, str):
+        return False
 
+    cp = cp.strip()
+
+    if not re.fullmatch(r"\d{5}", cp):
+        return False
+
+    provincia = int(cp[:2])
+    return 1 <= provincia <= 52
+
+def normalize_tipo_funeral(value: str) -> str | None:
+    if not isinstance(value, str):
+        return None
+    return VALID_TIPO_FUNERAL.get(value.strip().lower())
 
 def clean_text(value: Any) -> Optional[str]:
     if value is None:

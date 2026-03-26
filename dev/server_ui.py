@@ -20,7 +20,7 @@ from dev.tools.tool_2_3.rag_store import (
     retrieve_faq_rag,
     retrieve_brand_rag,
 )
-from dev.aux_functions import cfg
+from dev.aux_functions import cfg, normalize_tipo_funeral, is_valid_postal_code
 from dev.users_control import (
     can_user_call_pricing,
     consume_pricing_call,
@@ -150,7 +150,7 @@ def pricing_widget() -> str:
         Devuelve opciones de planes funerarios con precios y condiciones en función de:
         - edad
         - código postal
-        - tipo de funeral (incineración o inhumación)
+        - tipo de funeral ('incineración' o 'inhumación')
         - velatorio
         - ceremonia
 
@@ -222,6 +222,33 @@ def pricing_api(
         "limitResetAt": limit_info["reset_at_iso"],
     }
 
+    tipo_funeral_normalizado = normalize_tipo_funeral(tipo_funeral)
+    if tipo_funeral_normalizado is None:
+        return ToolResult(
+            content=(
+                "El tipo de funeral indicado no es válido. "
+                "Debe ser 'incineración' o 'inhumación'."
+            ),
+            structured_content={
+                "ok": False,
+                "error": "INVALID_FUNERAL_TYPE",
+                "message": (
+                    "El campo tipo_funeral debe ser 'incineración' o 'inhumación'."
+                ),
+                "summary": {
+                    "total_resultados": 0,
+                    "mensaje": "Tipo de funeral no válido.",
+                },
+                "quotes": [],
+            },
+            meta={
+                **base_meta,
+                "quoteReady": False,
+                "quoteCount": 0,
+                "apiStatus": None,
+            },
+        )
+
     if not can_user_call_pricing(ctx):
         return ToolResult(
             content=(
@@ -280,11 +307,37 @@ def pricing_api(
             },
         )
 
+    if not is_valid_postal_code(codigo_postal):
+        return ToolResult(
+            content=(
+                "El código postal indicado no es válido en España. "
+                "Debe contener 5 dígitos y corresponder a una provincia española."
+            ),
+            structured_content={
+                "ok": False,
+                "error": "INVALID_POSTAL_CODE",
+                "message": (
+                    "El código postal debe tener 5 dígitos y un prefijo entre 01 y 52."
+                ),
+                "summary": {
+                    "total_resultados": 0,
+                    "mensaje": "Código postal no válido.",
+                },
+                "quotes": [],
+            },
+            meta={
+                **base_meta,
+                "quoteReady": False,
+                "quoteCount": 0,
+                "apiStatus": None,
+            },
+        )
+
     state = {
         "datos": {
             "codigo_postal": codigo_postal,
             "edad": edad,
-            "destino_final": tipo_funeral,
+            "destino_final": tipo_funeral_normalizado,
             "velatorio": velatorio,
             "ceremonia": ceremonia,
         },
