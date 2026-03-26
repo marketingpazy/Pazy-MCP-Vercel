@@ -136,10 +136,6 @@ def _node_has_semantic_content(node: Any) -> bool:
 def _node_to_text(path: list[str], node: dict) -> str:
     parts: list[str] = []
 
-    if path:
-        parts.append(f"Ruta: {' > '.join(path)}")
-
-    # campos principales
     if "pregunta" in node:
         parts.append(f"Pregunta: {_normalize_scalar(node['pregunta'])}")
 
@@ -175,7 +171,6 @@ def _node_to_text(path: list[str], node: dict) -> str:
     if "notas_de_seguridad" in node:
         parts.append(f"Notas de seguridad: {_normalize_scalar(node['notas_de_seguridad'])}")
 
-    # listas simples adicionales
     for key, value in node.items():
         if key in SEMANTIC_KEYS:
             continue
@@ -185,7 +180,6 @@ def _node_to_text(path: list[str], node: dict) -> str:
             if joined:
                 parts.append(f"{key}: {joined}")
 
-        # caso especial de listas de dicts tipo referencias
         elif isinstance(value, list) and value and all(isinstance(x, dict) for x in value):
             rendered_items: list[str] = []
             for item in value:
@@ -200,7 +194,6 @@ def _node_to_text(path: list[str], node: dict) -> str:
                 parts.append(f"{key}: " + " | ".join(rendered_items))
 
     return "\n".join(parts).strip()
-
 
 def _collect_leaf_docs(tree: dict, prefix: str, doc_type: str) -> list[Document]:
     docs: list[Document] = []
@@ -350,11 +343,8 @@ def retrieve_faq_rag(vs: FAISS, query: str, k: int = 3) -> list[dict]:
     )
     out: list[dict] = []
     for d in docs:
-        meta = d.metadata or {}
         out.append(
             {
-                "source": meta.get("source", ""),
-                "path": meta.get("path", ""),
                 "content": d.page_content,
             }
         )
@@ -369,11 +359,8 @@ def retrieve_brand_rag(vs: FAISS, query: str, k: int = 3) -> list[dict]:
     )
     out: list[dict] = []
     for d in docs:
-        meta = d.metadata or {}
         out.append(
             {
-                "source": meta.get("source", ""),
-                "path": meta.get("path", ""),
                 "content": d.page_content,
             }
         )
