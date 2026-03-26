@@ -66,25 +66,39 @@ WIDGET_HTML_PATH = next(
     _widget_candidates[0],  # fallback
 )
 
-# Auto-detect domain: WIDGET_DOMAIN env var > VERCEL_PROJECT_PRODUCTION_URL > VERCEL_URL > fallback
 def _resolve_widget_domain() -> str:
+    def _normalize(url: str) -> str:
+        url = url.strip()
+        if not url:
+            return None
+        if not url.startswith("http"):
+            url = f"https://{url}"
+        return url.rstrip("/")
+
     # 1. Explicit override — always wins
-    explicit = os.getenv("WIDGET_DOMAIN")
+    explicit = _normalize(os.getenv("WIDGET_DOMAIN"))
     if explicit:
         return explicit
 
-    # 2. Vercel production URL (e.g. "mcp-pazy.vercel.app") — stable across deploys
-    prod_url = os.getenv("VERCEL_PROJECT_PRODUCTION_URL")
+    # 2. Stable production domain (Vercel)
+    prod_url = _normalize(os.getenv("VERCEL_PROJECT_PRODUCTION_URL"))
     if prod_url:
-        return f"https://{prod_url}"
+        return prod_url
 
-    # 3. Vercel deployment URL (changes per deploy, but always available)
-    vercel_url = os.getenv("VERCEL_URL")
+    # 3. Deployment URL (fallback válido pero no ideal)
+    vercel_url = _normalize(os.getenv("VERCEL_URL"))
     if vercel_url:
-        return f"https://{vercel_url}"
+        return vercel_url
 
-    # 4. Local dev fallback
-    return f"http://localhost:{port}"
+    # 4. Local ONLY if explicitly allowed
+    if os.getenv("ENV", "production") == "development":
+        port = os.getenv("PORT", "3000")
+        return f"http://localhost:{port}"
+
+    # 5. Hard fail in production
+    raise RuntimeError(
+        "Widget domain not configured. Set WIDGET_DOMAIN or VERCEL_PROJECT_PRODUCTION_URL."
+    )
 
 WIDGET_DOMAIN = _resolve_widget_domain()
 
@@ -187,7 +201,7 @@ def pricing_widget() -> str:
         """
     ),
     annotations={
-        "readOnlyHint": False,
+        "readOnlyHint": True,
         "destructiveHint": False,
         "idempotentHint": False,
         "openWorldHint": True,
@@ -216,10 +230,6 @@ def pricing_api(
             "resourceUri": WIDGET_URI,
         },
         "openai/outputTemplate": WIDGET_URI,
-        "maxAllowedCalls": limit_info["max_calls"],
-        "callsUsed": limit_info["count"],
-        "callsRemaining": limit_info["remaining"],
-        "limitResetAt": limit_info["reset_at_iso"],
     }
 
     tipo_funeral_normalizado = normalize_tipo_funeral(tipo_funeral)
@@ -240,70 +250,70 @@ def pricing_api(
                     "mensaje": "Tipo de funeral no válido.",
                 },
                 "quotes": [],
+                "usage": {
+                    "remaining": limit_info["remaining"],
+                },
             },
             meta={
                 **base_meta,
                 "quoteReady": False,
-                "quoteCount": 0,
-                "apiStatus": None,
             },
         )
 
     if not can_user_call_pricing(ctx):
         return ToolResult(
             content=(
-                """Has agotado el máximo de 10 consultas permitidas en las últimas 24 horas. 
-                    Ya no puedo generar una nueva cotización aquí por ahora. 
-                    Si lo deseas, puedo indicarte cómo continuar con un asesor."""
+                "Has agotado el máximo de 10 consultas permitidas en las últimas 24 horas. "
+                "Ya no puedo generar una nueva cotización aquí por ahora. "
+                "Si lo deseas, puedo indicarte cómo continuar con un asesor."
             ),
             structured_content={
                 "ok": False,
                 "error": "LIMIT_TRIES_REACHED",
                 "message": "El usuario ha alcanzado el máximo de 10 consultas en 24 horas.",
-                "ui": {
-                    "resourceUri": WIDGET_URI,
-                },
-                "openai/outputTemplate": WIDGET_URI,
                 "summary": {
                     "total_resultados": 0,
                     "mensaje": "Límite de consultas alcanzado.",
                 },
                 "quotes": [],
+                "limitReached": True,
+                "usage": {
+                    "remaining": 0,
+                },
             },
             meta={
                 **base_meta,
                 "quoteReady": False,
-                "quoteCount": 0,
-                "apiStatus": None,
             },
         )
 
     if int(edad) < int(EDAD_MIN):
         return ToolResult(
             content=(
-                f"""El usuario debe de ser mayor de 50 años. Si el usuario es menor de esa edad deberá 
-                    de ponerse en contacto con un operador tlf: 900 900 516. Se pasará con un operador de su código postal {codigo_postal}"""
+                f"El usuario debe ser mayor de {EDAD_MIN} años. "
+                f"Si es menor de esa edad deberá ponerse en contacto con un operador "
+                f"en el teléfono 900 900 516. Se le pasará con un operador de su "
+                f"código postal {codigo_postal}."
             ),
             structured_content={
                 "ok": False,
                 "error": "MIN_AGE_NOT_REACHED",
-                "message": f"""El usuario es menor de 50 años. Si el usuario es menor de esa edad deberá 
-                    de ponerse en contacto con un operador tlf: 900 900 516.""",
-                "ui": {
-                    "resourceUri": WIDGET_URI,
-                },
-                "openai/outputTemplate": WIDGET_URI,
+                "message": (
+                    f"El usuario es menor de {EDAD_MIN} años. "
+                    "Debe ponerse en contacto con un operador en el teléfono 900 900 516."
+                ),
                 "summary": {
                     "total_resultados": 0,
-                    "mensaje": "Edad mínima no alanzada.",
+                    "mensaje": "Edad mínima no alcanzada.",
                 },
                 "quotes": [],
+                "usage": {
+                    "remaining": limit_info["remaining"],
+                },
             },
             meta={
                 **base_meta,
                 "quoteReady": False,
-                "quoteCount": 0,
-                "apiStatus": None,
             },
         )
 
@@ -324,12 +334,13 @@ def pricing_api(
                     "mensaje": "Código postal no válido.",
                 },
                 "quotes": [],
+                "usage": {
+                    "remaining": limit_info["remaining"],
+                },
             },
             meta={
                 **base_meta,
                 "quoteReady": False,
-                "quoteCount": 0,
-                "apiStatus": None,
             },
         )
 
@@ -361,19 +372,11 @@ def pricing_api(
 
     limit_info = consume_pricing_call(ctx)
 
-    base_meta = {
-        **base_meta,
-        "apiStatus": api_status,
-        "callsUsed": limit_info["count"],
-        "callsRemaining": limit_info["remaining"],
-        "limitResetAt": limit_info["reset_at_iso"],
-    }
-
     if ok and isinstance(api_status, int) and 200 <= api_status < 300:
         if total_resultados == 0:
             text = "He procesado tu solicitud, pero no he encontrado cotizaciones disponibles."
         else:
-            text = f"Aquí tienes tu cotización."
+            text = "Aquí tienes tu cotización."
 
         compat_payload = {
             **normalized,
@@ -381,16 +384,17 @@ def pricing_api(
                 "resourceUri": WIDGET_URI,
             },
             "openai/outputTemplate": WIDGET_URI,
+            "usage": {
+                "remaining": limit_info["remaining"],
+            },
         }
 
         return ToolResult(
-            content=f"{text}\n\n{json.dumps({'ui': {'resourceUri': WIDGET_URI}, 'openai/outputTemplate': WIDGET_URI}, ensure_ascii=False)}",
+            content=text,
             structured_content=compat_payload,
             meta={
                 **base_meta,
                 "quoteReady": True,
-                "quoteCount": len(quotes),
-                "preferredOutput": "ui_only",
             },
         )
 
@@ -401,11 +405,15 @@ def pricing_api(
             "Has agotado el máximo de 10 consultas permitidas en las últimas 24 horas. "
             "Ya no puedo generar una nueva cotización aquí."
         )
+        remaining = 0
+        limit_reached = True
     else:
         user_text = (
             "No he podido obtener la cotización en este momento. "
             "Si quieres, puedes revisar los datos o probar más tarde."
         )
+        remaining = limit_info["remaining"]
+        limit_reached = remaining == 0
 
     return ToolResult(
         content=user_text,
@@ -417,14 +425,16 @@ def pricing_api(
                 "resourceUri": WIDGET_URI,
             },
             "openai/outputTemplate": WIDGET_URI,
+            "usage": {
+                "remaining": remaining,
+            },
+            "limitReached": limit_reached,
         },
         meta={
             **base_meta,
             "quoteReady": False,
-            "quoteCount": 0,
         },
     )
-
 
 
 ################## TOOL 2 CONTEXTO RAG ###########################
