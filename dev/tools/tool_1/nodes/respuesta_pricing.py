@@ -28,8 +28,13 @@ def _build_resumen_texto(input_data: Dict[str, Any], resultado: Dict[str, Any]) 
     precio_total = format_money_for_text(resultado.get("precio_total"))
     precio_contado = format_money_for_text(resultado.get("precio_contado"))
 
-    cuotas = resultado.get("cuotas_mensuales") or []
+    cuotas = resultado.get("cuotas_mensuales") or {}
     cuota_preferida = None
+    cuotas_texto = ""
+
+    print(f"cuotas: {cuotas}")
+
+    # Caso 1
 
     if isinstance(cuotas, list):
         for cuota in cuotas:
@@ -38,18 +43,33 @@ def _build_resumen_texto(input_data: Dict[str, Any], resultado: Dict[str, Any]) 
             if to_float(cuota.get("plazo_anos")) == 10:
                 cuota_preferida = cuota
                 break
+                
         if cuota_preferida is None and cuotas:
             cuota_preferida = cuotas[0] if isinstance(cuotas[0], dict) else None
+        if isinstance(cuota_preferida, dict):
+            plazo = to_float(cuota_preferida.get("plazo_anos"))
+            importe = to_float(cuota_preferida.get("cuota_mensual"))
+            if plazo is not None and importe is not None:
+                plazo_str = str(int(plazo)) if float(plazo).is_integer() else str(plazo)
+                importe_str = format_money_for_text(importe)
+                cuotas_texto = f"{plazo_str} años: {importe_str}/mes"
 
-    cuotas_texto = ""
-    if cuota_preferida:
-        plazo = to_float(cuota_preferida.get("plazo_anos"))
-        importe = to_float(cuota_preferida.get("cuota_mensual"))
-        if plazo is not None and importe is not None:
-            plazo_str = str(int(plazo)) if float(plazo).is_integer() else str(plazo)
-            importe_str = format_money_for_text(importe)
-            cuotas_texto = f"{plazo_str} años: {importe_str}/mes"
+    # Caso 2
+    elif isinstance(cuotas, dict):
+         importe_10 = cuotas.get("10 años")
+        if importe_10 is None:
+            importe_10 = cuotas.get("10 anos")
+        if importe_10 is None:
+            importe_10 = cuotas.get("10")
 
+        if importe_10 is not None:
+            importe_str = format_money_for_text(importe_10)
+            cuotas_texto = f"10 años: {importe_str}/mes"
+        elif cuotas:
+            primera_clave, primer_valor = next(iter(cuotas.items()))
+            importe_str = format_money_for_text(primer_valor)
+            cuotas_texto = f"{primera_clave}: {importe_str}/mes"
+            
     partes = [nombre_plan]
 
     if precio_total:
