@@ -82,15 +82,15 @@ def map_destino_final(value: Any) -> str:
 
 def map_si_no(value: Any) -> str:
     if value is True:
-        return "si"
+        return "Si"
     if value is False:
-        return "no"
+        return "No"
 
     v = (clean_text(value) or "").lower()
     if v in {"si", "sí", "true", "1"}:
-        return "si"
+        return "Si"
     if v in {"no", "false", "0"}:
-        return "no"
+        return "No"
     return ""
 
 
