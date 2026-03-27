@@ -33,7 +33,6 @@ def _build_resumen_texto(input_data: Dict[str, Any], resultado: Dict[str, Any]) 
     cuotas_texto = ""
 
     # Caso 1
-
     if isinstance(cuotas, list):
         for cuota in cuotas:
             if not isinstance(cuota, dict):
@@ -41,9 +40,10 @@ def _build_resumen_texto(input_data: Dict[str, Any], resultado: Dict[str, Any]) 
             if to_float(cuota.get("plazo_anos")) == 10:
                 cuota_preferida = cuota
                 break
-                
+
         if cuota_preferida is None and cuotas:
             cuota_preferida = cuotas[0] if isinstance(cuotas[0], dict) else None
+
         if isinstance(cuota_preferida, dict):
             plazo = to_float(cuota_preferida.get("plazo_anos"))
             importe = to_float(cuota_preferida.get("cuota_mensual"))
@@ -54,7 +54,7 @@ def _build_resumen_texto(input_data: Dict[str, Any], resultado: Dict[str, Any]) 
 
     # Caso 2
     elif isinstance(cuotas, dict):
-         importe_10 = cuotas.get("10 años")
+        importe_10 = cuotas.get("10 años")
         if importe_10 is None:
             importe_10 = cuotas.get("10 anos")
         if importe_10 is None:
@@ -67,7 +67,7 @@ def _build_resumen_texto(input_data: Dict[str, Any], resultado: Dict[str, Any]) 
             primera_clave, primer_valor = next(iter(cuotas.items()))
             importe_str = format_money_for_text(primer_valor)
             cuotas_texto = f"{primera_clave}: {importe_str}/mes"
-            
+
     partes = [nombre_plan]
 
     if precio_total:
@@ -357,4 +357,3 @@ def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
             },
         },
     }
-
