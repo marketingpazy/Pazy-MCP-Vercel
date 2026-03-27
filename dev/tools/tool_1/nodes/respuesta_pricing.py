@@ -32,8 +32,6 @@ def _build_resumen_texto(input_data: Dict[str, Any], resultado: Dict[str, Any]) 
     cuota_preferida = None
     cuotas_texto = ""
 
-    print(f"cuotas: {cuotas}")
-
     # Caso 1
 
     if isinstance(cuotas, list):
