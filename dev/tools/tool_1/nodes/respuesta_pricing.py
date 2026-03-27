@@ -357,3 +357,4 @@ def normalizar_respuesta_pricing(state: Dict[str, Any]) -> Dict[str, Any]:
             },
         },
     }
+
