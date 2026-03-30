@@ -45,7 +45,7 @@ faq_pazy:
       respuesta: >
         Pazy ofrece servicios en toda España, tanto en la península como en las islas.
         Aunque la empresa tiene oficinas físicas en Madrid, la gestión del servicio se
-        realiza de forma digital y telefónica, con atención 24 horas todos los días. 
+        realiza de forma digital y telefónica, con atención 24 horas todos los días.
         Para contactar puedes llamar al 900 900 516 (llamada gratuita).
 
     oficinas:
@@ -55,13 +55,14 @@ faq_pazy:
   
   cobertura_horaria:
       aliases: >
-        - horario llamadas 
-        - horario 
-        - cuando puedo llamar 
-        - a que hora puedo llamar 
+        - horario llamadas
+        - horario
+        - cuando puedo llamar
+        - a que hora puedo llamar
       horario_llamadas: >
-        IMPORTANTE, EL HORARIO DE LLAMADAS COMERCIALES ES DE LUNES A JUEVES DE 
-        9:00 A 18:00 Y VIERNES DE 9:00 A 14:00. El teléfono de contacto es el 900 900 516 (llamada gratuita).
+        IMPORTANTE, EL HORARIO DE LLAMADAS COMERCIALES ES DE LUNES A JUEVES DE
+        9:00 A 18:00 Y VIERNES DE 9:00 A 14:00.
+        El teléfono de contacto es el 900 900 516 (llamada gratuita).
 
   modelo_servicio:
     es_seguro:
@@ -246,11 +247,9 @@ faq_pazy:
       pregunta: >
         ¿Dónde llamo para dudas? ¿A qué teléfono puedo contactar para dudas?
       respuesta: >
-        Si no es para un servicio urgente, para cualquier duda puedes llamar al
-        teléfono gratuito 900 900 516, en horario comercial (lunes a jueves de
-        9:00 a 18:00, viernes de 9:00 a 14:00) o acceder al apartado de preguntas
-        frecuentes de la web oficial.
-
+        Para cualquier duda puedes llamar al teléfono gratuito 900 900 516,
+        en horario comercial (lunes a jueves de 9:00 a 18:00, viernes de 9:00 a 14:00)
+        o acceder al apartado de preguntas frecuentes de la web oficial.
 
     verificar_datos_del_contrato:
       pregunta: >
