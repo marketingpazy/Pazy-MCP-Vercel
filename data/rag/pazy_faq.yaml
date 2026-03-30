@@ -26,26 +26,27 @@ faq_pazy:
         consultarse en la web oficial de la empresa.
 
     contacto_pazy:
-      aliases:
-        - quiero hablar con un operador
-        - quiero hablar con un asesor
-        - quiero atención humana
-        - quiero que me atienda una persona
-        - quiero llamar por teléfono
-        - pásame con un operador
-        - pásame con un asesor
-        - dame el teléfono de contacto
-        - contacto de Pazy
-        - hablar con alguien
+      pregunta: >
+        ¿Cómo puedo contactar con Pazy? ¿Cuál es el teléfono de Pazy?
+        ¿Cómo hablo con un operador? ¿Cómo hablo con un asesor?
+        Quiero hablar con una persona. Quiero llamar por teléfono.
+        Dame el teléfono. ¿A qué número llamo? Vías de contacto.
+        Quiero atención humana. Pásame con un operador. Pásame con un asesor.
+        Como puedo contactar con vosotros. Como puedo contactar con ustedes.
+        Número de teléfono de Pazy. Teléfono de contacto.
       respuesta: >
-        Puedes contactar con un operador o asesor de Pazy en el teléfono general 900 900 516.
+        Puedes contactar con un operador o asesor de Pazy llamando al teléfono
+        gratuito 900 900 516. El horario de atención comercial es de lunes a jueves
+        de 9:00 a 18:00 y viernes de 9:00 a 14:00. Para servicios urgentes hay
+        atención las 24 horas todos los días.
 
   cobertura_geografica:
     nacional:
       respuesta: >
         Pazy ofrece servicios en toda España, tanto en la península como en las islas.
         Aunque la empresa tiene oficinas físicas en Madrid, la gestión del servicio se
-        realiza de forma digital y telefónica, con atención 24 horas todos los días.
+        realiza de forma digital y telefónica, con atención 24 horas todos los días. 
+        Para contactar puedes llamar al 900 900 516 (llamada gratuita).
 
     oficinas:
       respuesta: >
@@ -60,7 +61,7 @@ faq_pazy:
         - a que hora puedo llamar 
       horario_llamadas: >
         IMPORTANTE, EL HORARIO DE LLAMADAS COMERCIALES ES DE LUNES A JUEVES DE 
-        9:00 A 18:00 Y VIERNES DE 9:00 A 14:00. 
+        9:00 A 18:00 Y VIERNES DE 9:00 A 14:00. El teléfono de contacto es el 900 900 516 (llamada gratuita).
 
   modelo_servicio:
     es_seguro:
@@ -245,9 +246,11 @@ faq_pazy:
       pregunta: >
         ¿Dónde llamo para dudas? ¿A qué teléfono puedo contactar para dudas?
       respuesta: >
-        Si no es para un servicio urgente, para cualquier duda, puedes contactar con tu
-        asesor de Pazy en horario comercial (de lunes a jueves de 9:00 a 18:00 y viernes
-        de 9:00 a 18:00) o acceder al apartado de preguntas frecuentes de la web oficial.
+        Si no es para un servicio urgente, para cualquier duda puedes llamar al
+        teléfono gratuito 900 900 516, en horario comercial (lunes a jueves de
+        9:00 a 18:00, viernes de 9:00 a 14:00) o acceder al apartado de preguntas
+        frecuentes de la web oficial.
+
 
     verificar_datos_del_contrato:
       pregunta: >
