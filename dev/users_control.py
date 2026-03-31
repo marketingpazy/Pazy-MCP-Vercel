@@ -12,25 +12,41 @@ class UserRateLimitState:
     count: int
     reset_at: datetime
 
+
 PRICING_CALLS_BY_USER: dict[str, UserRateLimitState] = {}
+
 
 def _extract_subject_from_ctx(ctx: Context) -> Optional[str]:
     request_context = getattr(ctx, "request_context", None)
     meta = getattr(request_context, "meta", None) if request_context else None
 
-    if meta is not None:
-        for key in ("openai_subject", "openai/subject", "subject", "user_id", "user"):
-            if isinstance(meta, dict) and meta.get(key):
-                return str(meta[key])
-            attr_name = key.replace("/", "_")
-            if hasattr(meta, attr_name):
-                value = getattr(meta, attr_name)
-                if value:
-                    return str(value)
+    if meta is None:
+        return None
 
-    client_id = getattr(ctx, "client_id", None)
-    if client_id:
-        return f"client:{client_id}"
+    # Caso 1: meta es dict
+    if isinstance(meta, dict):
+        for key in (
+            "openai/subject",
+            "openai_subject",
+            "subject",
+            "user_id",
+            "user",
+        ):
+            value = meta.get(key)
+            if value:
+                return str(value)
+
+    # Caso 2: meta es objeto tipo Pydantic/attrs con aliases raros
+    for attr_name in (
+        "openai_subject",   # alias normalizado probable
+        "subject",
+        "user_id",
+        "user",
+    ):
+        if hasattr(meta, attr_name):
+            value = getattr(meta, attr_name)
+            if value:
+                return str(value)
 
     return None
 
@@ -40,14 +56,8 @@ def resolve_user_key(ctx: Context) -> str:
     if subject:
         return f"user:{subject}"
 
-    session_id = getattr(ctx, "session_id", None)
-    if session_id:
-        return f"session:{session_id}"
-
-    request_id = getattr(ctx, "request_id", None)
-    if request_id:
-        return f"request:{request_id}"
-
+    # Si no hay subject estable, NO usar request_id para rate limit por persona.
+    # session_id tampoco vale si quieres que aplique entre chats.
     return "user:anonymous"
 
 
