@@ -83,7 +83,7 @@ async def health(request):
     return JSONResponse({"ok": True})
 
 async def openai_apps_challenge(request):
-    token = os.getenv("OPENAI_APPS_CHALLENGE_TOKEN", "").strip()
+    token =  os.getenv("OPENAI_APPS_CHALLENGE_TOKEN", "").strip()
 
     if not token:
         return PlainTextResponse(
@@ -110,7 +110,6 @@ app = Starlette(
     ],
     lifespan=mcp_app.lifespan,
 )
-
 
 @mcp.resource(
     WIDGET_URI,
@@ -204,6 +203,19 @@ def pricing_api(
 ) -> Dict[str, Any]:
     limit_info = get_user_limit_info(ctx)
 
+    base_meta = {
+        "ui": {
+            "resourceUri": WIDGET_URI,
+        },
+        "openai/outputTemplate": WIDGET_URI,
+        "usage": {
+            "maxCalls": limit_info["max_calls"],
+            "used": limit_info["count"],
+            "remaining": limit_info["remaining"],
+            "limitReached": limit_info["limit_reached"],
+        },
+    }
+
     tipo_funeral_normalizado = normalize_tipo_funeral(tipo_funeral)
     if tipo_funeral_normalizado is None:
         return ToolResult(
@@ -230,8 +242,7 @@ def pricing_api(
                 },
             },
             meta={
-                "ui": {"resourceUri": WIDGET_URI},
-                "openai/outputTemplate": WIDGET_URI,
+                **base_meta,
                 "quoteReady": False,
             },
         )
@@ -257,13 +268,11 @@ def pricing_api(
                     "maxCalls": limit_info["max_calls"],
                     "used": limit_info["count"],
                     "remaining": 0,
-                    "resetAt": limit_info["reset_at_iso"],
                     "limitReached": True,
                 },
             },
             meta={
-                "ui": {"resourceUri": WIDGET_URI},
-                "openai/outputTemplate": WIDGET_URI,
+                **base_meta,
                 "quoteReady": False,
             },
         )
@@ -292,13 +301,11 @@ def pricing_api(
                     "maxCalls": limit_info["max_calls"],
                     "used": limit_info["count"],
                     "remaining": limit_info["remaining"],
-                    "resetAt": limit_info["reset_at_iso"],
                     "limitReached": limit_info["limit_reached"],
                 },
             },
             meta={
-                "ui": {"resourceUri": WIDGET_URI},
-                "openai/outputTemplate": WIDGET_URI,
+                **base_meta,
                 "quoteReady": False,
             },
         )
@@ -324,13 +331,11 @@ def pricing_api(
                     "maxCalls": limit_info["max_calls"],
                     "used": limit_info["count"],
                     "remaining": limit_info["remaining"],
-                    "resetAt": limit_info["reset_at_iso"],
                     "limitReached": limit_info["limit_reached"],
                 },
             },
             meta={
-                "ui": {"resourceUri": WIDGET_URI},
-                "openai/outputTemplate": WIDGET_URI,
+                **base_meta,
                 "quoteReady": False,
             },
         )
@@ -372,7 +377,9 @@ def pricing_api(
 
     if ok and isinstance(api_status, int) and 200 <= api_status < 300:
         if quote_count == 0:
-            text = "He procesado tu solicitud, pero no he encontrado cotizaciones disponibles."
+            text = (
+                "He procesado tu solicitud, pero no he encontrado cotizaciones disponibles."
+            )
         else:
             text = "Aquí tienes tu cotización."
 
@@ -394,7 +401,9 @@ def pricing_api(
             content=text,
             structured_content=compat_payload,
             meta={
-                "ui": {"resourceUri": WIDGET_URI},
+                "ui": {
+                    "resourceUri": WIDGET_URI,
+                },
                 "openai/outputTemplate": WIDGET_URI,
                 "quoteReady": True,
                 "quoteCount": quote_count,
@@ -441,7 +450,9 @@ def pricing_api(
             "limitReached": limit_reached,
         },
         meta={
-            "ui": {"resourceUri": WIDGET_URI},
+            "ui": {
+                "resourceUri": WIDGET_URI,
+            },
             "openai/outputTemplate": WIDGET_URI,
             "quoteReady": False,
             "quoteCount": quote_count,
