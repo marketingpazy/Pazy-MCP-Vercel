@@ -11,7 +11,7 @@ from fastmcp.server.apps import AppConfig, ResourceCSP
 from fastmcp.tools import ToolResult
 from starlette.routing import Mount, Route
 from starlette.applications import Starlette
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, PlainTextResponse
 
 from dev.tools.tool_1.subgraph_tool_1 import create_pricing_subgraph
 from dev.tools.tool_2_3.rag_store import (
@@ -20,7 +20,7 @@ from dev.tools.tool_2_3.rag_store import (
     retrieve_faq_rag,
     retrieve_brand_rag,
 )
-from dev.aux_functions import cfg, normalize_tipo_funeral, is_valid_postal_code
+from dev.aux_functions import cfg, normalize_tipo_funeral, is_valid_postal_code, resolve_widget_domain
 from dev.users_control import (
     can_user_call_pricing,
     consume_pricing_call,
@@ -47,8 +47,6 @@ PROJECT_ROOT = BASE_DIR.parent
 WIDGET_URI = cfg("WIDGET_URI", "ui://widget/pricing-widget-v1.html")
 
 # Resolve widget path — try multiple locations for compatibility
-# On Vercel serverless, only dev/ is bundled in the function (Python imports)
-# On local dev, public/ is available too
 _widget_candidates = [
     BASE_DIR / "pricing-widget.html",                    # dev/pricing-widget.html (Vercel)
     PROJECT_ROOT / "public" / "pricing-widget.html",     # public/ (local dev)
@@ -66,43 +64,7 @@ WIDGET_HTML_PATH = next(
     _widget_candidates[0],  # fallback
 )
 
-def _resolve_widget_domain() -> str:
-    def _normalize(url: str) -> str:
-        if not url:
-            return None
-        url = url.strip()
-        if not url:
-            return None
-        if not url.startswith("http"):
-            url = f"https://{url}"
-        return url.rstrip("/")
-
-    # 1. Explicit override — always wins
-    explicit = _normalize(os.getenv("WIDGET_DOMAIN"))
-    if explicit:
-        return explicit
-
-    # 2. Stable production domain (Vercel)
-    prod_url = _normalize(os.getenv("VERCEL_PROJECT_PRODUCTION_URL"))
-    if prod_url:
-        return prod_url
-
-    # 3. Deployment URL (fallback válido pero no ideal)
-    vercel_url = _normalize(os.getenv("VERCEL_URL"))
-    if vercel_url:
-        return vercel_url
-
-    # 4. Local ONLY if explicitly allowed
-    if os.getenv("ENV", "production") == "development":
-        port = os.getenv("PORT", "3000")
-        return f"http://localhost:{port}"
-
-    # 5. Hard fail in production
-    raise RuntimeError(
-        "Widget domain not configured. Set WIDGET_DOMAIN or VERCEL_PROJECT_PRODUCTION_URL."
-    )
-
-WIDGET_DOMAIN = _resolve_widget_domain()
+WIDGET_DOMAIN = resolve_widget_domain()
 
 WIDGET_CONNECT_DOMAINS = [
     # Añadir APIs externas solo si el widget hace fetch directamente.
@@ -120,7 +82,21 @@ mcp = FastMCP("pazy-context")
 async def health(request):
     return JSONResponse({"ok": True})
 
+async def openai_apps_challenge(request):
+    token = os.getenv("OPENAI_APPS_CHALLENGE_TOKEN", "").strip()
 
+    if not token:
+        return PlainTextResponse(
+            "OPENAI_APPS_CHALLENGE_TOKEN not configured",
+            status_code=404,
+            headers={"Cache-Control": "no-store"},
+        )
+
+    return PlainTextResponse(
+        token,
+        status_code=200,
+        headers={"Cache-Control": "no-store"},
+    )
 
 # Streamable HTTP transport — works reliably on Vercel serverless
 # ChatGPT and Claude both support this transport
@@ -129,6 +105,7 @@ mcp_app = mcp.http_app(path="/")
 app = Starlette(
     routes=[
         Route("/healthz", health),
+        Route("/.well-known/openai-apps-challenge", openai_apps_challenge, methods=["GET"]),
         Mount("/mcp", app=mcp_app),
     ],
     lifespan=mcp_app.lifespan,
@@ -227,13 +204,6 @@ def pricing_api(
 ) -> Dict[str, Any]:
     limit_info = get_user_limit_info(ctx)
 
-    base_meta = {
-        "ui": {
-            "resourceUri": WIDGET_URI,
-        },
-        "openai/outputTemplate": WIDGET_URI,
-    }
-
     tipo_funeral_normalizado = normalize_tipo_funeral(tipo_funeral)
     if tipo_funeral_normalizado is None:
         return ToolResult(
@@ -253,11 +223,15 @@ def pricing_api(
                 },
                 "quotes": [],
                 "usage": {
+                    "maxCalls": limit_info["max_calls"],
+                    "used": limit_info["count"],
                     "remaining": limit_info["remaining"],
+                    "limitReached": limit_info["limit_reached"],
                 },
             },
             meta={
-                **base_meta,
+                "ui": {"resourceUri": WIDGET_URI},
+                "openai/outputTemplate": WIDGET_URI,
                 "quoteReady": False,
             },
         )
@@ -280,11 +254,16 @@ def pricing_api(
                 "quotes": [],
                 "limitReached": True,
                 "usage": {
+                    "maxCalls": limit_info["max_calls"],
+                    "used": limit_info["count"],
                     "remaining": 0,
+                    "resetAt": limit_info["reset_at_iso"],
+                    "limitReached": True,
                 },
             },
             meta={
-                **base_meta,
+                "ui": {"resourceUri": WIDGET_URI},
+                "openai/outputTemplate": WIDGET_URI,
                 "quoteReady": False,
             },
         )
@@ -310,11 +289,16 @@ def pricing_api(
                 },
                 "quotes": [],
                 "usage": {
+                    "maxCalls": limit_info["max_calls"],
+                    "used": limit_info["count"],
                     "remaining": limit_info["remaining"],
+                    "resetAt": limit_info["reset_at_iso"],
+                    "limitReached": limit_info["limit_reached"],
                 },
             },
             meta={
-                **base_meta,
+                "ui": {"resourceUri": WIDGET_URI},
+                "openai/outputTemplate": WIDGET_URI,
                 "quoteReady": False,
             },
         )
@@ -337,11 +321,16 @@ def pricing_api(
                 },
                 "quotes": [],
                 "usage": {
+                    "maxCalls": limit_info["max_calls"],
+                    "used": limit_info["count"],
                     "remaining": limit_info["remaining"],
+                    "resetAt": limit_info["reset_at_iso"],
+                    "limitReached": limit_info["limit_reached"],
                 },
             },
             meta={
-                **base_meta,
+                "ui": {"resourceUri": WIDGET_URI},
+                "openai/outputTemplate": WIDGET_URI,
                 "quoteReady": False,
             },
         )
@@ -369,34 +358,47 @@ def pricing_api(
 
     ok = bool(normalized.get("ok"))
     quotes = normalized.get("quotes") or []
-    summary = normalized.get("summary") or {}
-    total_resultados = summary.get("total_resultados", 0)
+    quote_count = len(quotes)
 
+    # La consulta válida consume intento
     limit_info = consume_pricing_call(ctx)
 
+    usage_payload = {
+        "maxCalls": limit_info["max_calls"],
+        "used": limit_info["count"],
+        "remaining": limit_info["remaining"],
+        "limitReached": limit_info["limit_reached"],
+    }
+
     if ok and isinstance(api_status, int) and 200 <= api_status < 300:
-        if total_resultados == 0:
+        if quote_count == 0:
             text = "He procesado tu solicitud, pero no he encontrado cotizaciones disponibles."
         else:
             text = "Aquí tienes tu cotización."
 
         compat_payload = {
             **normalized,
+            "summary": {
+                **(normalized.get("summary") or {}),
+                "total_resultados": quote_count,
+            },
+            "quoteCount": quote_count,
             "ui": {
                 "resourceUri": WIDGET_URI,
             },
             "openai/outputTemplate": WIDGET_URI,
-            "usage": {
-                "remaining": limit_info["remaining"],
-            },
+            "usage": usage_payload,
         }
 
         return ToolResult(
             content=text,
             structured_content=compat_payload,
             meta={
-                **base_meta,
+                "ui": {"resourceUri": WIDGET_URI},
+                "openai/outputTemplate": WIDGET_URI,
                 "quoteReady": True,
+                "quoteCount": quote_count,
+                "usage": usage_payload,
             },
         )
 
@@ -407,15 +409,18 @@ def pricing_api(
             "Has agotado el máximo de 10 consultas permitidas en las últimas 24 horas. "
             "Ya no puedo generar una nueva cotización aquí."
         )
-        remaining = 0
+        usage_payload = {
+            **usage_payload,
+            "remaining": 0,
+            "limitReached": True,
+        }
         limit_reached = True
     else:
         user_text = (
             "No he podido obtener la cotización en este momento. "
             "Si quieres, puedes revisar los datos o probar más tarde."
         )
-        remaining = limit_info["remaining"]
-        limit_reached = remaining == 0
+        limit_reached = usage_payload["limitReached"]
 
     return ToolResult(
         content=user_text,
@@ -423,18 +428,24 @@ def pricing_api(
             **normalized,
             "ok": False,
             "error": error_code,
+            "summary": {
+                **(normalized.get("summary") or {}),
+                "total_resultados": quote_count,
+            },
+            "quoteCount": quote_count,
             "ui": {
                 "resourceUri": WIDGET_URI,
             },
             "openai/outputTemplate": WIDGET_URI,
-            "usage": {
-                "remaining": remaining,
-            },
+            "usage": usage_payload,
             "limitReached": limit_reached,
         },
         meta={
-            **base_meta,
+            "ui": {"resourceUri": WIDGET_URI},
+            "openai/outputTemplate": WIDGET_URI,
             "quoteReady": False,
+            "quoteCount": quote_count,
+            "usage": usage_payload,
         },
     )
 
