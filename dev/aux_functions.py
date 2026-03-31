@@ -159,3 +159,39 @@ def normalize_list_of_lines(value: Any) -> List[str]:
         if item:
             parts.append(item)
     return parts
+
+def resolve_widget_domain() -> str:
+    def _normalize(url: str) -> str:
+        if not url:
+            return None
+        url = url.strip()
+        if not url:
+            return None
+        if not url.startswith("http"):
+            url = f"https://{url}"
+        return url.rstrip("/")
+
+    # 1. Explicit override — always wins
+    explicit = _normalize(os.getenv("WIDGET_DOMAIN"))
+    if explicit:
+        return explicit
+
+    # 2. Stable production domain (Vercel)
+    prod_url = _normalize(os.getenv("VERCEL_PROJECT_PRODUCTION_URL"))
+    if prod_url:
+        return prod_url
+
+    # 3. Deployment URL (fallback válido pero no ideal)
+    vercel_url = _normalize(os.getenv("VERCEL_URL"))
+    if vercel_url:
+        return vercel_url
+
+    # 4. Local ONLY if explicitly allowed
+    if os.getenv("ENV", "production") == "development":
+        port = os.getenv("PORT", "3000")
+        return f"http://localhost:{port}"
+
+    # 5. Hard fail in production
+    raise RuntimeError(
+        "Widget domain not configured. Set WIDGET_DOMAIN or VERCEL_PROJECT_PRODUCTION_URL."
+    )
