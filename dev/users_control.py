@@ -5,7 +5,7 @@ import json
 import os
 from upstash_redis import Redis
 
-MAX_PRICING_CALLS = 10
+MAX_PRICING_CALLS = 1000000000
 RESET_WINDOW_HOURS = 24
 
 # Reutilizable en serverless mientras la función esté caliente
