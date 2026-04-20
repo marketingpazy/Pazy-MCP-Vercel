@@ -53,6 +53,7 @@ def tratar_datos(state: Dict[str, Any]) -> Dict[str, Any]:
         "extras_tipificados": extras_tipificados, 
         "extras_euros": 0, 
         "kilometraje_km": 0, 
+        "source": "OpenAI",
         } 
     
     state["msg_post"] = msg_post 
