@@ -138,39 +138,17 @@
   }
 
   .cards {
-    display: flex;
-    flex-direction: row;
-    gap: 18px;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    padding: 2px 4px 8px;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(18, 200, 207, 0.35) transparent;
-    cursor: grab;
-  }
-
-  .cards.dragging {
-    cursor: grabbing;
-    scroll-snap-type: none;
-  }
-
-  .cards::-webkit-scrollbar {
-    height: 6px;
-  }
-
-  .cards::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .cards::-webkit-scrollbar-thumb {
-    background: rgba(18, 200, 207, 0.35);
-    border-radius: 999px;
+    width: 100%;
+    max-width: 460px;
+    margin: 0 auto;
+    padding: 2px 0 8px;
+    display: block;
   }
 
   .quote-card {
-    flex: 0 0 420px;
-    scroll-snap-align: start;
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
     background: var(--card-bg);
     border: 2px solid var(--brand-border);
     border-radius: var(--radius-card);
@@ -501,9 +479,16 @@
       padding: 10px;
     }
 
+    .cards {
+      max-width: 100%;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
     .quote-card {
-      flex-basis: 326px;
+      width: 100%;
       min-height: 710px;
+      max-width: 326px;
     }
 
     .quote-hero {
@@ -1023,34 +1008,6 @@
         }
       }
 
-      const slider = cardsEl;
-      let isDragging = false;
-      let startX = 0;
-      let startScrollLeft = 0;
-
-      slider.addEventListener("mousedown", (e) => {
-        isDragging = true;
-        startX = e.pageX - slider.offsetLeft;
-        startScrollLeft = slider.scrollLeft;
-        slider.classList.add("dragging");
-      });
-
-      window.addEventListener("mouseup", () => {
-        isDragging = false;
-        slider.classList.remove("dragging");
-      });
-
-      slider.addEventListener("mousemove", (e) => {
-        if (!isDragging) return;
-        e.preventDefault();
-        const x = e.pageX - slider.offsetLeft;
-        slider.scrollLeft = startScrollLeft - (x - startX) * 1.2;
-      });
-
-      slider.addEventListener("mouseleave", () => {
-        isDragging = false;
-        slider.classList.remove("dragging");
-      });
     </script>
   </body>
 </html>
